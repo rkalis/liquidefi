@@ -1,0 +1,10 @@
+build/
+node_modules/
+installed_contracts/
+bridge.log
+.env
+dist/
+yarn-error.log
+npm-debug.log
+.idea/
+.code-workspace

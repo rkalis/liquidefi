@@ -19,6 +19,9 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
 
     ERC20 public underlying;
 
+    event Deposited(address indexed account, uint256 amount);
+    event Withdrawn(address indexed account, uint256 amount);
+
     constructor(string memory name, string memory symbol, ERC20 _underlying) ERC20(name, symbol) public {
         underlying = _underlying;
     }
@@ -36,7 +39,7 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
      * @return The exchange rate (Token / shToken)
      */
     function exchangeRate() public view returns (uint256) {
-        return wdiv(underlyingSupply(), totalSupply());
+        return totalSupply() == 0 ? 1 ether : wdiv(underlyingSupply(), totalSupply());
     }
 
     /**
@@ -68,24 +71,26 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
     }
 
     /**
-     * @notice Join the liquidation pool with `amount` of underlying tokens. Requires
+     * @notice Deposit `amount` of underlying tokens into the liquidation pool. Requires
      * an approval from `msg.sender` to this contract of at least `amount`. Transfers
      * underlying tokens from `msg.sender` to this contract and mints new SharkTokens.
-     * @param amount The amount of tokens the user wants to put into the pool
+     * @param amount The amount of tokens to deposit into the pool
      */
-    function join(uint256 amount) external nonReentrant {
+    function deposit(uint256 amount) external nonReentrant {
         _mint(msg.sender, toSharkToken(amount));
         underlying.transferFrom(msg.sender, address(this), amount);
+        emit Deposited(msg.sender, amount);
     }
 
     /**
-     * @notice Exit the liquidation pool with `amount` of SharkTokens. Transfers
+     * @notice Withdraw `amount` of SharkTokens from the liquidation pool. Transfers
      * underlying tokens from this contract to `msg.sender` and burns SharkTokens.
-     * @param amount The amount of SharkTokens the user wants to take out of the pool
+     * @param amount The amount of SharkTokens to withdraw from the pool
      */
-    function exit(uint256 amount) external nonReentrant {
+    function withdraw(uint256 amount) external nonReentrant {
         _burn(msg.sender, amount);
         underlying.transfer(msg.sender, fromSharkToken(amount));
+        emit Withdrawn(msg.sender, amount);
     }
 }
 

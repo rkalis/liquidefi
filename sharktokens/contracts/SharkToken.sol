@@ -6,47 +6,83 @@ import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 import "./lib/DSAuth.sol";
 import "./lib/DSMath.sol";
 
+/**
+ * @title SharkToken
+ * @author LiquiDeFi
+ *
+ * @notice A SharkToken wraps any ERC20 token and uses the underlying token to
+ * liquidate loans on popular lending platforms. The profits of these liquidations
+ * are shared among the SharkToken holders.
+ */
 contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
     uint256 public constant UINT_MAX_VALUE = uint256(-1);
 
     ERC20 public underlying;
 
-    constructor(
-        string memory name,
-        string memory symbol,
-        ERC20 _underlying
-    ) ERC20(name, symbol) public {
+    constructor(string memory name, string memory symbol, ERC20 _underlying) ERC20(name, symbol) public {
         underlying = _underlying;
     }
 
-    // Supply of the underlying asset
+    /**
+     * @notice Get the supply of underlying tokens inside this contract (i.e. the contract's balance)
+     * @return The contract's balance of underlying tokens
+     */
     function underlyingSupply() public view returns (uint256) {
         return underlying.balanceOf(address(this));
     }
 
-    // Exchange rate Token/shToken
+    /**
+     * @notice Get the exchange rate between the underlying token and the SharkToken (Token / shToken)
+     * @return The exchange rate (Token / shToken)
+     */
     function exchangeRate() public view returns (uint256) {
         return wdiv(underlyingSupply(), totalSupply());
     }
 
-    // Exchange `tokenAmount` from tokens to shark tokens
-    function toSharkToken(uint256 tokenAmount) public view returns (uint256) {
-        return wdiv(tokenAmount, exchangeRate());
+    /**
+     * @notice Calculate the amount of SharkTokens equal in value to `amount` underlying tokens
+     * @param amount The amount of underlying tokens to convert
+     * @return The amount of SharkTokens equal to `amount` underlying tokens
+     */
+    function toSharkToken(uint256 amount) public view returns (uint256) {
+        return wdiv(amount, exchangeRate());
     }
 
-    // Exchange `sharkTokenAmount` from shark tokens to tokens
-    function fromSharkToken(uint256 sharkTokenAmount) public view returns (uint256) {
-        return wmul(sharkTokenAmount, exchangeRate());
+    /**
+     * @notice Calculate the amount of underlying tokens equal in value to `amount` SharkTokens
+     * @param amount The amount of SharkTokens to convert
+     * @return The amount of underlying tokens equal to `amount` SharkTokens
+     */
+    function fromSharkToken(uint256 amount) public view returns (uint256) {
+        return wmul(amount, exchangeRate());
     }
 
-    // Join the shark token pool with `amount` of tokens
-    // Requires APPROVAL
+    /**
+     * @notice Get the amount of underlying tokens that `account` can receive in exchange for
+     * its balance in SharkTokens
+     * @param account The account whose balance is checked
+     * @return The amount of underlying tokens equal to the SharkToken balance of `account`
+     */
+    function underlyingBalanceOf(address account) public view returns (uint256) {
+        return fromSharkToken(balanceOf(account));
+    }
+
+    /**
+     * @notice Join the liquidation pool with `amount` of underlying tokens. Requires
+     * an approval from `msg.sender` to this contract of at least `amount`. Transfers
+     * underlying tokens from `msg.sender` to this contract and mints new SharkTokens.
+     * @param amount The amount of tokens the user wants to put into the pool
+     */
     function join(uint256 amount) external nonReentrant {
         _mint(msg.sender, toSharkToken(amount));
         underlying.transferFrom(msg.sender, address(this), amount);
     }
 
-    // Exit the shark token pool with `amount` of shark tokens
+    /**
+     * @notice Exit the liquidation pool with `amount` of SharkTokens. Transfers
+     * underlying tokens from this contract to `msg.sender` and burns SharkTokens.
+     * @param amount The amount of SharkTokens the user wants to take out of the pool
+     */
     function exit(uint256 amount) external nonReentrant {
         _burn(msg.sender, amount);
         underlying.transfer(msg.sender, fromSharkToken(amount));

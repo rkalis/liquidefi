@@ -8,3 +8,5 @@ yarn-error.log
 npm-debug.log
 .idea/
 .code-workspace
+coverage/
+coverage.json

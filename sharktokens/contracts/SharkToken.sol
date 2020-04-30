@@ -19,8 +19,8 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
 
     ERC20 public underlying;
 
-    event Deposited(address indexed account, uint256 amount);
-    event Withdrawn(address indexed account, uint256 amount);
+    event Deposited(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
+    event Withdrawn(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
 
     constructor(string memory name, string memory symbol, ERC20 _underlying) ERC20(name, symbol) public {
         underlying = _underlying;
@@ -77,9 +77,10 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
      * @param amount The amount of tokens to deposit into the pool
      */
     function deposit(uint256 amount) external nonReentrant {
-        _mint(msg.sender, toSharkToken(amount));
+        uint256 transferAmount = toSharkToken(amount);(amount);
+        _mint(msg.sender, transferAmount);
         underlying.transferFrom(msg.sender, address(this), amount);
-        emit Deposited(msg.sender, amount);
+        emit Deposited(msg.sender, amount, transferAmount);
     }
 
     /**
@@ -88,9 +89,10 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
      * @param amount The amount of SharkTokens to withdraw from the pool
      */
     function withdraw(uint256 amount) external nonReentrant {
+        uint256 transferAmount = fromSharkToken(amount);
         _burn(msg.sender, amount);
-        underlying.transfer(msg.sender, fromSharkToken(amount));
-        emit Withdrawn(msg.sender, amount);
+        underlying.transfer(msg.sender, transferAmount);
+        emit Withdrawn(msg.sender, transferAmount, amount);
     }
 }
 

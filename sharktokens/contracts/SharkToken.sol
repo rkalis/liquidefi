@@ -2,9 +2,12 @@
 pragma solidity ^0.6.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 import "./lib/DSAuth.sol";
 import "./lib/DSMath.sol";
+import "./lib/ILendingPoolAddressesProvider.sol";
+import "./lib/ILendingPool.sol";
 
 /**
  * @title SharkToken
@@ -17,12 +20,14 @@ import "./lib/DSMath.sol";
 contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
     uint256 public constant UINT_MAX_VALUE = uint256(-1);
 
-    ERC20 public underlying;
+    IERC20 public underlying;
+    ILendingPoolAddressesProvider aaveAddressProvider = ILendingPoolAddressesProvider(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
 
     event Deposited(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Withdrawn(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
+    event Liquidated(bytes4 indexed platform, address liquidatedUser, uint256 profit);
 
-    constructor(string memory name, string memory symbol, ERC20 _underlying) ERC20(name, symbol) public {
+    constructor(string memory name, string memory symbol, IERC20 _underlying) ERC20(name, symbol) public {
         underlying = _underlying;
     }
 
@@ -77,7 +82,7 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
      * @param amount The amount of tokens to deposit into the pool
      */
     function deposit(uint256 amount) external nonReentrant {
-        uint256 transferAmount = toSharkToken(amount);(amount);
+        uint256 transferAmount = toSharkToken(amount);
         _mint(msg.sender, transferAmount);
         underlying.transferFrom(msg.sender, address(this), amount);
         emit Deposited(msg.sender, amount, transferAmount);
@@ -93,6 +98,39 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
         _burn(msg.sender, amount);
         underlying.transfer(msg.sender, transferAmount);
         emit Withdrawn(msg.sender, transferAmount, amount);
+    }
+
+    /**
+     * @notice Liquidate a loan on Aave.
+     * @param collateralAddress The address of the collateral token
+     * @param userAddress The address of the user that gets liquidated
+     * @param purchaseAmount The amount of underlying tokens to use in the liquidation
+     */
+    function liquidateOnAave(
+        address collateralAddress,
+        address userAddress,
+        uint256 purchaseAmount
+    ) external auth nonReentrant {
+        // uint256 gasProvided = gasleft(); // + some gas
+        uint256 initialSupply = underlyingSupply();
+
+        ILendingPool lendingPool = ILendingPool(aaveAddressProvider.getLendingPool());
+        underlying.approve(aaveAddressProvider.getLendingPoolCore(), purchaseAmount);
+        lendingPool.liquidationCall(
+            collateralAddress,
+            address(underlying),
+            userAddress,
+            purchaseAmount,
+            false
+        );
+
+        // Swap collateral to underlying token
+        // uint256 txFee = (gasProvided - gasleft()) * tx.gasprice; // + some (big) margin
+        // Swap underlying token for ETH to pay for tx fee
+        // Send tx fees ETH to tx.origin/msg.sender (bot)
+
+        require(underlyingSupply() >= initialSupply, "Need to make a profit");
+        emit Liquidated(bytes4(0), userAddress, underlyingSupply() - initialSupply);
     }
 }
 
@@ -119,4 +157,3 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
 //     purchaseAmount,
 //     receiveATokens
 // );
-

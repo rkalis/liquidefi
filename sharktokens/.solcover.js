@@ -1,3 +1,3 @@
 module.exports = {
-  skipFiles: ['lib', 'Migrations.sol', 'TestToken.sol']
+  skipFiles: ['lib', 'mock', 'Migrations.sol']
 }

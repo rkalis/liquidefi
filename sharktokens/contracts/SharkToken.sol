@@ -4,10 +4,10 @@ pragma solidity ^0.6.0;
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
-import "./lib/DSAuth.sol";
-import "./lib/DSMath.sol";
-import "./lib/ILendingPoolAddressesProvider.sol";
-import "./lib/ILendingPool.sol";
+import "./lib/dappsys/DSAuth.sol";
+import "./lib/dappsys/DSMath.sol";
+import "./lib/aave/ILendingPoolAddressesProvider.sol";
+import "./lib/aave/ILendingPool.sol";
 
 /**
  * @title SharkToken

@@ -42,5 +42,9 @@ module.exports = {
   ],
   api_keys: {
     etherscan: process.env.ETHERSCAN_API_KEY
-  }
+  },
+  mocha: {
+    enableTimeouts: false,
+    before_timeout: 1200000 // Here is 2min but can be whatever timeout is suitable for you.
+}
 };

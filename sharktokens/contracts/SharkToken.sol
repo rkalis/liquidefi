@@ -8,6 +8,7 @@ import "./lib/dappsys/DSAuth.sol";
 import "./lib/dappsys/DSMath.sol";
 import "./lib/aave/ILendingPoolAddressesProvider.sol";
 import "./lib/aave/ILendingPool.sol";
+import "./Uniswapper.sol";
 
 /**
  * @title SharkToken
@@ -17,11 +18,12 @@ import "./lib/aave/ILendingPool.sol";
  * liquidate loans on popular lending platforms. The profits of these liquidations
  * are shared among the SharkToken holders.
  */
-contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
+contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard, Uniswapper {
     uint256 public constant UINT_MAX_VALUE = uint256(-1);
+    address public constant ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
+    ILendingPoolAddressesProvider private aaveAddressProvider = ILendingPoolAddressesProvider(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
     IERC20 public underlying;
-    ILendingPoolAddressesProvider aaveAddressProvider = ILendingPoolAddressesProvider(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
 
     event Deposited(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Withdrawn(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
@@ -111,9 +113,9 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
         address userAddress,
         uint256 purchaseAmount
     ) external auth nonReentrant {
-        // uint256 gasProvided = gasleft(); // + some gas
         uint256 initialSupply = underlyingSupply();
 
+        // Liquidate on Aave
         ILendingPool lendingPool = ILendingPool(aaveAddressProvider.getLendingPool());
         underlying.approve(aaveAddressProvider.getLendingPoolCore(), purchaseAmount);
         lendingPool.liquidationCall(
@@ -124,36 +126,17 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard {
             false
         );
 
-        // Swap collateral to underlying token
-        // uint256 txFee = (gasProvided - gasleft()) * tx.gasprice; // + some (big) margin
-        // Swap underlying token for ETH to pay for tx fee
-        // Send tx fees ETH to tx.origin/msg.sender (bot)
+        // Swap received collateral back to underlying token
+        if (collateralAddress == ETH_MOCK_ADDRESS) {
+            _swapEthToTokenInput(address(underlying), address(this).balance);
+        } else {
+            uint256 swapAmount = IERC20(collateralAddress).balanceOf(address(this));
+            _swapTokenToTokenInput(collateralAddress, address(underlying), swapAmount);
+        }
+
+        // TODO: Take platform fee
 
         require(underlyingSupply() >= initialSupply, "Need to make a profit");
         emit Liquidated(bytes4(0), userAddress, underlyingSupply() - initialSupply);
     }
 }
-
-// Aave liquidation stuff (from Aave docs example)
-// /// Retrieve the LendingPool address
-// LendingPoolAddressesProvider provider = LendingPoolAddressesProvider("0x24a42fD28C976A61Df5D00D0599C34c4f90748c8"); // mainnet address, for other addresses: https://docs.aave.com/developers/developing-on-aave/deployed-contract-instances
-// LendingPool lendingPool = LendingPool(provider.getLendingPool());
-// ​
-// /// Input variables
-// address collateralAddress = /*collateral_address*/;
-// address daiAddress = "0x6B175474E89094C44Da98b954EedeAC495271d0F"; // mainnet
-// address userAddress = /*user_address_being_liquidated*/;
-// uint256 purchaseAmount = 100 * 1e18;
-// bool receiveATokens = true;
-// ​
-// /// Approve LendingPool contract to move your DAI
-// IERC20(daiAddress).approve(provider.getLendingPoolCore(), purchaseAmount);
-// ​
-// /// LiquidationCall method call
-// lendingPool.liquidationCall(
-//     collateralAddress,
-//     daiAddress,
-//     userAddress,
-//     purchaseAmount,
-//     receiveATokens
-// );

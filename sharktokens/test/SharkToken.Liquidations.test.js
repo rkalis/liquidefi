@@ -1,12 +1,8 @@
 /* global web3, artifacts, contract, before */
 const SharkToken = artifacts.require('SharkToken')
-const ILendingPool = artifacts.require('ILendingPool')
 const IERC20 = artifacts.require('IERC20')
-const ILendingPoolAddressesProvider = artifacts.require('ILendingPoolAddressesProvider')
 const chai = require("chai")
-const truffleAssert = require('truffle-assertions')
-const { setup } = require('./fixture/dummy_loans')
-const { ADDRESSES_PROVIDER, DAI_ADDRESS, BORROWER, USDC_ADDRESS } = require('./fixture/addresses')
+const { DAI_ADDRESS, BORROWER, USDC_ADDRESS } = require('./fixture/addresses')
 const { replacePriceOracle } = require('./fixture/dummy_loans')
 
 chai.use(require('chai-bn')(web3.utils.BN));

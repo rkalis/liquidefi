@@ -9,6 +9,12 @@ module.exports = {
       network_id: "*",
       gas: 10000000
     },
+    moonnet: {
+      host: "138.197.73.60",
+      port: 8546,
+      network_id: "*",
+      gas: 10000000
+    },
     rinkeby: {
       provider: function() {
         return new HDWalletProvider(`${process.env.MNEMONIC}`, `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`)

@@ -4,10 +4,10 @@ import "../lib/aave/IPriceOracleGetter.sol";
 
 contract MockPriceOracle is IPriceOracleGetter {
     address public crashedAsset;
+    uint256 public crashedPrice;
 
     function getAssetPrice(address _asset) public view override returns (uint256) {
-        // Crash USDC price
-        if (_asset == crashedAsset) return 0.0001 ether;
+        if (_asset == crashedAsset) return crashedPrice;
         return IPriceOracleGetter(0x76B47460d7F7c5222cFb6b6A75615ab10895DDe4).getAssetPrice(_asset);
     }
 
@@ -20,7 +20,8 @@ contract MockPriceOracle is IPriceOracleGetter {
     }
 
     // Change the crashed asset
-    function crashAsset(address _asset) public {
+    function crashAsset(address _asset, uint256 _price) public {
         crashedAsset = _asset;
+        crashedPrice = _price;
     }
 }

@@ -1,19 +1,18 @@
-/* global web3, artifacts, contract, before */
-const SharkToken = artifacts.require('SharkToken')
-const IERC20 = artifacts.require('IERC20')
-const chai = require("chai")
-const { DAI_ADDRESS, MINTER, USDC_ADDRESS } = require('./fixture/addresses')
-const { setup_usdc_collateral, teardown_oracle } = require('./fixture/fixture')
-const { mintDAI } = require('./util')
-const truffleAssert = require('truffle-assertions')
+const { contract, web3 } = require('@openzeppelin/test-environment');
+const SharkToken = contract.fromArtifact('SharkToken')
+const IERC20 = contract.fromArtifact('IERC20')
 
+const { setup_usdc_collateral, teardown_usdc_collateral } = require('./fixture/fixture')
+const { DAI_ADDRESS, USDC_ADDRESS, MOONNET_ACCOUNTS } = require('./fixture/addresses')
+const { mintDAI } = require('./util')
+
+const truffleAssert = require('truffle-assertions')
+const chai = require('chai')
 chai.use(require('chai-bn')(web3.utils.BN));
 const { expect } = chai
 
-contract('SharkToken', (accounts) => {
-  const admin = accounts[0]
-  const investor = accounts[1]
-  const target = accounts[2]
+describe('SharkToken Liquidations', () => {
+  const [admin, investor, target] = MOONNET_ACCOUNTS
 
   let sharkToken
   let daiToken
@@ -30,21 +29,21 @@ contract('SharkToken', (accounts) => {
   })
 
   afterEach(async () => {
-    await teardown_oracle()
+    await teardown_usdc_collateral(target)
   })
 
   describe('LiquidateOnAave', () => {
     it('can liquidate for USDC collateral on Aave', async () => {
       // given
-      const amount = web3.utils.toBN(web3.utils.toWei('20'))
+      const amount = web3.utils.toBN(web3.utils.toWei('50'))
 
       // when
       const tx = await sharkToken.liquidateOnAave(USDC_ADDRESS, target, amount, { from: admin })
 
       // then
-      expect(await sharkToken.exchangeRate()).to.be.bignumber.above('1')
+      const exchangeRate = await sharkToken.exchangeRate()
+      expect(exchangeRate).to.be.bignumber.above('1')
       truffleAssert.eventEmitted(tx, 'Liquidated')
     })
   })
-
 })

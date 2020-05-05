@@ -1,23 +1,23 @@
-/* global web3, artifacts, contract, before */
-const SharkToken = artifacts.require('SharkToken')
-const MockToken = artifacts.require('MockToken')
+const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
+const SharkToken = contract.fromArtifact('SharkToken')
+const MockToken = contract.fromArtifact('MockToken')
+const { MOONNET_ACCOUNTS } = require('./fixture/addresses')
+
 const chai = require("chai")
 const truffleAssert = require('truffle-assertions')
-
 chai.use(require('chai-bn')(web3.utils.BN));
 const { expect } = chai
 
-contract('SharkToken', (accounts) => {
-  const admin = accounts[0]
-  const investor = accounts[1]
+describe('SharkToken', () => {
+  const [admin, investor] = MOONNET_ACCOUNTS
   const investorBalance = web3.utils.toBN(web3.utils.toWei('100'))
 
   let mockToken
   let sharkToken
 
   beforeEach(async () => {
-    mockToken = await MockToken.new()
-    sharkToken = await SharkToken.new('Shark MockToken', 'shMCK', mockToken.address)
+    mockToken = await MockToken.new({ from: admin })
+    sharkToken = await SharkToken.new('Shark MockToken', 'shMCK', mockToken.address, { from: admin })
     await mockToken.transfer(investor, investorBalance, { from: admin })
   })
 
@@ -72,6 +72,7 @@ contract('SharkToken', (accounts) => {
       expect(await sharkToken.exchangeRate()).to.bignumber.equal(initialExchangeRate)
     })
 
+    // TODO: This test appears to be failing, should be investigated
     it('exchange rate does not change on deposit after profit', async () => {
       // given
       await mockToken.approve(sharkToken.address, '-1', { from: investor })
@@ -81,7 +82,7 @@ contract('SharkToken', (accounts) => {
       const profitSize = web3.utils.toBN(web3.utils.toWei('1'))
       await mockToken.transfer(sharkToken.address, profitSize, { from: admin })
 
-      const initialExchangeRate =  await sharkToken.exchangeRate()
+      const initialExchangeRate = await sharkToken.exchangeRate()
 
       // when
       await sharkToken.deposit(depositSize, { from: investor })

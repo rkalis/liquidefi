@@ -1,6 +1,8 @@
 var HDWalletProvider = require("@truffle/hdwallet-provider");
 require('dotenv').config();
 
+const moonmonic = 'myth like bonus scare over problem client lizard pioneer submit female collect'
+
 module.exports = {
   networks: {
     development: {
@@ -10,10 +12,11 @@ module.exports = {
       gas: 10000000
     },
     moonnet: {
-      host: "138.197.73.60",
-      port: 8546,
-      network_id: "*",
-      gas: 10000000
+      provider: function() {
+        return new HDWalletProvider(moonmonic, `https://node.moonnet.space/uuid/${process.env.MOONNET_UUID}`)
+      },
+      skipDryRun: true,
+      network_id: "*"
     },
     rinkeby: {
       provider: function() {
@@ -52,5 +55,5 @@ module.exports = {
   mocha: {
     enableTimeouts: false,
     before_timeout: 1200000 // Here is 2min but can be whatever timeout is suitable for you.
-}
+  }
 };

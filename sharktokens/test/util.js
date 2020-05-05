@@ -1,4 +1,5 @@
-const IERC20 = artifacts.require('IERC20')
+const { contract, web3 } = require('@openzeppelin/test-environment');
+const IERC20 = contract.fromArtifact('IERC20')
 const { DAI_ADDRESS, USDC_ADDRESS, MINTER } = require('./fixture/addresses')
 
 async function mintDAI(to, amount) {

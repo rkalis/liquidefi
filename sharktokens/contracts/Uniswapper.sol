@@ -2,10 +2,12 @@ pragma solidity ^0.6.0;
 
 import "./lib/uniswap/IUniswapFactory.sol";
 import "./lib/uniswap/IUniswapExchange.sol";
-import "./lib/dappsys/DSMath.sol";
+import "./lib/aave/WadRayMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
-contract Uniswapper is DSMath {
+contract Uniswapper {
+    using WadRayMath for uint256;
+
     IUniswapFactory constant uniswapFactory = IUniswapFactory(0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95);
 
     function _getUniswapExchange(address tokenAddress) internal view returns (IUniswapExchange) {
@@ -44,7 +46,7 @@ contract Uniswapper is DSMath {
     }
 
     function _swapEthToTokenOutput(address tokenAddress, uint256 buyAmount) internal returns (uint256) {
-        uint256 ethValue = wmul(_getEthToTokenOutputPrice(tokenAddress, buyAmount), 1.1 ether);
+        uint256 ethValue = _getEthToTokenOutputPrice(tokenAddress, buyAmount).wadMul(1.1 ether);
         return _getUniswapExchange(tokenAddress)
             .ethToTokenSwapOutput{value: ethValue}(buyAmount, uint256(now + 60));
     }
@@ -57,7 +59,7 @@ contract Uniswapper is DSMath {
 
     function _swapTokenToEthOutput(address tokenAddress, uint256 buyAmount) internal returns (uint256) {
         IUniswapExchange exchange = _getUniswapExchange(tokenAddress);
-        uint256 approvalAmount = wmul(_getTokenToEthOutputPrice(tokenAddress, buyAmount), 1.1 ether);
+        uint256 approvalAmount = _getTokenToEthOutputPrice(tokenAddress, buyAmount).wadMul(1.1 ether);
         IERC20(tokenAddress).approve(address(exchange), approvalAmount);
         return exchange.tokenToEthSwapOutput(buyAmount, approvalAmount, uint256(now + 60));
     }
@@ -70,7 +72,7 @@ contract Uniswapper is DSMath {
 
     function _swapTokenToTokenOutput(address from, address to, uint256 buyAmount) internal returns (uint256) {
         IUniswapExchange exchange = _getUniswapExchange(from);
-        uint256 approvalAmount = wmul(_getTokenToTokenOutputPrice(from, to, buyAmount), 1.1 ether);
+        uint256 approvalAmount = _getTokenToTokenOutputPrice(from, to, buyAmount).wadMul(1.1 ether);
         IERC20(from).approve(address(exchange), approvalAmount);
         return exchange.tokenToTokenSwapInput(buyAmount, approvalAmount, uint256(-1), uint256(now + 60), to);
     }

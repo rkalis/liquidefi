@@ -5,9 +5,9 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 import "./lib/dappsys/DSAuth.sol";
-import "./lib/dappsys/DSMath.sol";
 import "./lib/aave/ILendingPoolAddressesProvider.sol";
 import "./lib/aave/ILendingPool.sol";
+import "./lib/aave/WadRayMath.sol";
 import "./Uniswapper.sol";
 
 /**
@@ -18,9 +18,11 @@ import "./Uniswapper.sol";
  * liquidate loans on popular lending platforms. The profits of these liquidations
  * are shared among the SharkToken holders.
  */
-contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard, Uniswapper {
+contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
     uint256 public constant UINT_MAX_VALUE = uint256(-1);
     address public constant ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    using WadRayMath for uint256;
 
     ILendingPoolAddressesProvider private aaveAddressProvider = ILendingPoolAddressesProvider(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
     IERC20 public underlying;
@@ -43,10 +45,12 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard, Uniswapper {
 
     /**
      * @notice Get the exchange rate between the underlying token and the SharkToken (Token / shToken)
-     * @return The exchange rate (Token / shToken)
+     * @return The exchange rate (Token / shToken) in RAY (27 decimals)
      */
     function exchangeRate() public view returns (uint256) {
-        return totalSupply() == 0 ? 1 ether : wdiv(underlyingSupply(), totalSupply());
+        if (totalSupply() == 0) return 1e27;
+        return underlyingSupply().wadToRay()
+            .rayDiv(totalSupply().wadToRay());
     }
 
     /**
@@ -55,7 +59,9 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard, Uniswapper {
      * @return The amount of SharkTokens equal to `amount` underlying tokens
      */
     function toSharkToken(uint256 amount) public view returns (uint256) {
-        return wdiv(amount, exchangeRate());
+        uint256 rayAmount = amount.wadToRay();
+        uint256 rayResult = rayAmount.rayDiv(exchangeRate());
+        return rayResult.rayToWad();
     }
 
     /**
@@ -64,7 +70,9 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard, Uniswapper {
      * @return The amount of underlying tokens equal to `amount` SharkTokens
      */
     function fromSharkToken(uint256 amount) public view returns (uint256) {
-        return wmul(amount, exchangeRate());
+        uint256 rayAmount = amount.wadToRay();
+        uint256 rayResult = rayAmount.rayMul(exchangeRate());
+        return rayResult.rayToWad();
     }
 
     /**
@@ -84,10 +92,10 @@ contract SharkToken is ERC20, DSAuth, DSMath, ReentrancyGuard, Uniswapper {
      * @param amount The amount of tokens to deposit into the pool
      */
     function deposit(uint256 amount) external nonReentrant {
-        uint256 transferAmount = toSharkToken(amount);
-        _mint(msg.sender, transferAmount);
+        uint256 mintAmount = toSharkToken(amount);
+        _mint(msg.sender, mintAmount);
         underlying.transferFrom(msg.sender, address(this), amount);
-        emit Deposited(msg.sender, amount, transferAmount);
+        emit Deposited(msg.sender, amount, mintAmount);
     }
 
     /**

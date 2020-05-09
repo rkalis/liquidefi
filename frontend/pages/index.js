@@ -5,7 +5,6 @@ import Layout from '../components/Layout'
 
 const Home = () => (
   <Layout>
-    <Header />
     <main role="main" />
   </Layout>
 )

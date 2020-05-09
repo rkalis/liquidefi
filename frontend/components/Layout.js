@@ -14,6 +14,7 @@ const Layout = ({ pageTitle = 'LiquiDefi', children }) => (
       <link rel="icon" href="/favicon.ico" />
     </Head>
     <StateProvider initialState={InitialState} reducer={Reducer}>
+      <Header />
       {children}
       <style jsx global>{`
         // Defaults

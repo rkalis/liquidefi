@@ -1,6 +1,7 @@
 // REACT & NEXT
 import React from 'react'
 import Head from 'next/head'
+import Header from './Header'
 
 // STATE
 import { StateProvider } from '../state/state'
@@ -94,7 +95,10 @@ const Layout = ({ pageTitle = 'LiquiDefi', children }) => (
       `}</style>
       <style jsx global>
         {`
-          body { background: #333; color: white; }
+          body {
+            background: #333;
+            color: white;
+          }
         `}
       </style>
     </StateProvider>

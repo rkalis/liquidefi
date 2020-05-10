@@ -2,6 +2,7 @@
 import React from 'react'
 import Head from 'next/head'
 import Header from './Header'
+import VideoBG from './VideoBG'
 
 // STATE
 import { StateProvider } from '../state/state'
@@ -15,8 +16,10 @@ const Layout = ({ pageTitle = 'LiquiDefi', children }) => (
       <link rel="icon" href="/favicon.ico" />
     </Head>
     <StateProvider initialState={InitialState} reducer={Reducer}>
-      <Header />
-      {children}
+      <VideoBG fade="3">
+        <Header />
+        {children}
+      </VideoBG>
       <style jsx global>{`
         // Defaults
         *,
@@ -44,6 +47,7 @@ const Layout = ({ pageTitle = 'LiquiDefi', children }) => (
         }
         img {
           max-width: 100%;
+          max-height: 100%;
         }
         a {
           color: inherit;

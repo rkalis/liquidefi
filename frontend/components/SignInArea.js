@@ -2,7 +2,7 @@ import { useStateValue } from '../state/state'
 import getOnboard from '../utils/Onboarding'
 import addrShortener from '../utils/addrShortener'
 
-const SignInArea = () => {
+const SignInArea = ({stretch, fs}) => {
   const [{ dapp }, dispatch] = useStateValue()
 
   const onboard = getOnboard({
@@ -46,25 +46,25 @@ const SignInArea = () => {
       ) : (
         <table>
           <tbody>
-            <tr>
+            <tr className="wallet-row">
               <td>
                 <b>Wallet:</b>
               </td>
               <td>{dapp.wallet.name}</td>
             </tr>
-            <tr>
+            <tr className="address-row">
               <td>
                 <b>Address:</b>
               </td>
               <td>{dapp.address && addrShortener(dapp.address)}</td>
             </tr>
-            <tr>
+            <tr className="network-row">
               <td>
                 <b>Network:</b>
               </td>
               <td>{dapp.network}</td>
             </tr>
-            <tr>
+            <tr className="balance-row">
               <td>
                 <b>Balance:</b>
               </td>
@@ -77,6 +77,27 @@ const SignInArea = () => {
           </tbody>
         </table>
       )}
+      <style jsx>{`
+        .wallet-row,
+        .address-row,
+        .network-row,
+        .balance-row { display: none; }
+        
+        .address-row { display: block; }
+        .address-row b{ display: none; }
+        
+        button {
+          border-radius: 4px;
+          border: none;
+          color:white;
+          cursor: pointer;
+          padding: 5px 10px;
+          font-size: .8rem;
+          background-color: rgba(0,52,132,1.0);
+          width: ${stretch ? '100%' : 'auto' };
+          font-size: ${fs ? fs : 'inherit'}
+        }
+      `}</style>
     </div>
   )
 }

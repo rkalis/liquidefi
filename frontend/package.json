@@ -8,11 +8,13 @@
     "start": "next start"
   },
   "dependencies": {
+    "animate.css": "^4.0.0",
     "bnc-notify": "^1.2.0",
     "bnc-onboard": "^1.8.0",
     "next": "9.3.6",
     "react": "16.13.1",
     "react-dom": "16.13.1",
-    "react-html-parser": "^2.0.2"
+    "react-html-parser": "^2.0.2",
+    "react-typist": "^2.0.5"
   }
 }

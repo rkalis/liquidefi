@@ -15,10 +15,10 @@ const Header = () => {
         </div>
         <SignInArea />
       </div>
-      <hr />
       <style jsx>{`
         header {
-          padding: 10px;
+          padding: 15px 10px 10px 10px;
+          background: rgba(19,27,48,1.0);
         }
         .header-row {
           display: flex;

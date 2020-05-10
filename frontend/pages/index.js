@@ -52,7 +52,7 @@ const Home = () => {
           background: rgba(255, 255, 255, 0.7);
           margin: auto;
           display: flex;
-          flex: 0 0 800px; 
+          flex: 0 0 1000px; 
           align-items: top;
           color: rgba(20, 26, 42, 1);
         }
@@ -69,10 +69,21 @@ const Home = () => {
           width: 500px;
         }
 
+        @font-face {
+          font-family: 'PKMN RBYGSC';
+          src: url('fonts/PKMN-RBYGSC.woff2') format('woff2');
+          font-weight: normal;
+          font-style: normal;
+        }
+
+
         .text {
           display: inline-block;
           color: rgba(19, 27, 48, 1);
           width: 450px;
+          font-family: 'PKMN RBYGSC';
+          word-spacing: .5rem;
+          font-size: 14px;
         }
       `}</style>
     </Layout>

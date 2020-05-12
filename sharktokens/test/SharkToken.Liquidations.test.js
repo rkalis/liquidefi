@@ -38,7 +38,7 @@ describe('SharkToken Liquidations', () => {
       const amount = web3.utils.toBN(web3.utils.toWei('50'))
 
       // when
-      const tx = await sharkToken.liquidateOnAave(USDC_ADDRESS, target, amount, { from: admin })
+      const tx = await sharkToken.liquidateOnAave(USDC_ADDRESS, target, amount, '0', admin, { from: admin })
 
       // then
       const exchangeRate = await sharkToken.exchangeRate()

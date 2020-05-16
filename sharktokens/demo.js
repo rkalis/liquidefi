@@ -54,7 +54,7 @@ describe('Week 2 Demo', () => {
     await delay(2000)
     console.log(`    Bot capitalises on this great opportunity`)
     const amount = web3.utils.toBN(web3.utils.toWei('50'))
-    await sharkToken.liquidateOnAave(USDC_ADDRESS, target, amount, { from: admin })
+    await sharkToken.liquidateOnAave(USDC_ADDRESS, target, amount, '0', admin, { from: admin })
   })
 
   it('Scrooge McDuck', async () => {

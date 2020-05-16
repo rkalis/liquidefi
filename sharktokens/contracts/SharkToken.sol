@@ -27,6 +27,7 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
 
     ILendingPoolAddressesProvider private aaveAddressProvider = ILendingPoolAddressesProvider(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
     IERC20 public underlying;
+    uint256 public maxFee = 0.8 ether; // 80% (1 ether == 100%)
 
     address immutable factory;
     IWETH immutable WETH;
@@ -39,6 +40,15 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
         underlying = _underlying;
         factory = _factory;
         WETH = IWETH(IUniswapV2Router01(router).WETH());
+    }
+
+    /**
+     * @notice Sets the max liquidation fee
+     * @param _newFee The updated max fee
+     */
+    function setMaxFee(uint256 _newFee) public auth {
+        require(_newFee < maxFee, "Max fee can only be lowered");
+        maxFee = _newFee;
     }
 
     /**
@@ -125,8 +135,11 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
     function liquidateOnAave(
         address collateralAddress,
         address userAddress,
-        uint256 purchaseAmount
-    ) external auth nonReentrant {
+        uint256 purchaseAmount,
+        uint256 feePercentage,
+        address feeReceiver
+    ) external nonReentrant {
+        require(feePercentage <= maxFee, "Requested fee exceeds maximum");
         uint256 initialSupply = underlyingSupply();
 
         // Liquidate on Aave
@@ -148,9 +161,22 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
             _swapTokenToTokenInput(collateralAddress, address(underlying), swapAmount);
         }
 
-        // TODO: Take platform fee
-
         require(underlyingSupply() >= initialSupply, "Need to make a profit");
-        emit Liquidated(bytes4(0), userAddress, underlyingSupply() - initialSupply);
+
+        uint256 profit = underlyingSupply() - initialSupply;
+        _takeFee(profit, feePercentage, feeReceiver);
+        emit Liquidated(bytes4(0), userAddress, profit);
+    }
+
+    /**
+     * @notice Sends an amount of the underlying token to the `feeReceiver`
+     * based on the `platformFee` and `profit`.
+     * @param profit The amount of underlying tokens that were made during
+     * a liquidation.
+     */
+    function _takeFee(uint256 profit, uint256 percentage, address receiver) internal {
+        uint256 fee = profit.wadMul(percentage);
+        if (fee == 0) return;
+        underlying.transfer(receiver, fee);
     }
 }

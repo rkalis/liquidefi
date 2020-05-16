@@ -16,9 +16,11 @@ const Layout = ({ pageTitle = 'LiquiDefi', children }) => (
       <link rel="icon" href="/favicon.ico" />
     </Head>
     <StateProvider initialState={InitialState} reducer={Reducer}>
-      <VideoBG fade="3">
+      <VideoBG fade="0">
         <Header />
-        {children}
+        <main role="main">
+          {children}
+        </main>
       </VideoBG>
       <style jsx global>{`
         // Defaults
@@ -102,6 +104,13 @@ const Layout = ({ pageTitle = 'LiquiDefi', children }) => (
           body {
             background: #333;
             color: white;
+          }
+          main {
+            height: 100%;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            flex: 1;
           }
         `}
       </style>

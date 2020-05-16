@@ -5,7 +5,7 @@ const getOnboard = function (subscriptions) {
     onboard = Onboard({
       dappId: '482ea5f0-5482-4017-8f49-3e122720d788',
       subscriptions,
-      networkId: 3,
+      networkId: 4,
       walletSelect: {
         wallets: [{ walletName: 'metamask', preferred: true }],
       },

@@ -6,6 +6,12 @@ const VideoBG = ({ fade, children }) => (
     <video loop="loop" muted={true} autoPlay="autoplay" poster="">
       <source src="videos/aquarium.mp4" type="video/mp4" />
     </video>
+    {/* <iframe
+      frameBorder="0"
+      height="100%"
+      width="100%"
+      src="https://youtube.com/embed/Qzxy3GtSzt0?autoplay=1&controls=0&showinfo=0&autohide=1"></iframe> */}
+      {/* <embed src="https://youtube.com/embed/Qzxy3GtSzt0?autoplay=1&controls=0&showinfo=0&autohide=1" /> */}
     <div className="overlay">{children}</div>
     <style jsx global>{`
       html,
@@ -19,7 +25,7 @@ const VideoBG = ({ fade, children }) => (
         .vid-box {
           position: relative;
         }
-        .vid-box video {
+        .vid-box iframe, .vid-box embed {
           height: 100vh;
           width: 100%;
           z-index: 10;

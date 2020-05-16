@@ -1,4 +1,3 @@
-
 pragma solidity ^0.6.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
@@ -9,6 +8,8 @@ import "./lib/aave/ILendingPoolAddressesProvider.sol";
 import "./lib/aave/ILendingPool.sol";
 import "./lib/aave/WadRayMath.sol";
 import "./Uniswapper.sol";
+import './interfaces/IWETH.sol';
+import './interfaces/IUniswapV2Router01.sol';
 
 /**
  * @title SharkToken
@@ -27,12 +28,17 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
     ILendingPoolAddressesProvider private aaveAddressProvider = ILendingPoolAddressesProvider(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
     IERC20 public underlying;
 
+    address immutable factory;
+    IWETH immutable WETH;
+
     event Deposited(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Withdrawn(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Liquidated(bytes4 indexed platform, address liquidatedUser, uint256 profit);
 
-    constructor(string memory name, string memory symbol, IERC20 _underlying) ERC20(name, symbol) public {
+    constructor(string memory name, string memory symbol, IERC20 _underlying,address _factory, address router) ERC20(name, symbol) public {
         underlying = _underlying;
+        factory = _factory;
+        WETH = IWETH(IUniswapV2Router01(router).WETH());
     }
 
     /**

@@ -27,17 +27,18 @@ const CustomizedLabel = ({
   )
 }
 
-const PieChart = ({data}) => {
-  const COLORS = ['#0088FE', '#00C49F']
+const PieChartWrap = ({data, baseSize = 200}) => {
+  const COLORS = ['#00C49F', '#0088FE']
+  const chartSize = (baseSize * 2) + 10
   return (
-    <PieChart width={400} height={400}>
+    <PieChart width={chartSize} height={chartSize}>
       <Pie
         data={data}
-        cx={200}
-        cy={200}
+        cx={baseSize}
+        cy={baseSize}
         labelLine={false}
         label={<CustomizedLabel />}
-        outerRadius={80}
+        outerRadius={baseSize}
         fill="#8884d8"
         dataKey="value"
       >
@@ -49,4 +50,4 @@ const PieChart = ({data}) => {
   )
 }
 
-export default PieChart
+export default PieChartWrap

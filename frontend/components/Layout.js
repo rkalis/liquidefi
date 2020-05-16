@@ -112,6 +112,15 @@ const Layout = ({ pageTitle = 'LiquiDefi', children }) => (
             justify-content: center;
             flex: 1;
           }
+          button {
+            border: none;
+            appearance: none;
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            color: white;
+            border-radius: 4px;
+            margin-right: 20px;
+          }
         `}
       </style>
     </StateProvider>

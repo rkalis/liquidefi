@@ -3,8 +3,8 @@ let onboard = undefined
 const getOnboard = function (subscriptions) {
   if (!onboard) {
     onboard = Onboard({
-      dappId: '482ea5f0-5482-4017-8f49-3e122720d788',
       subscriptions,
+      hideBranding: true,
       networkId: 4,
       walletSelect: {
         wallets: [{ walletName: 'metamask', preferred: true }],

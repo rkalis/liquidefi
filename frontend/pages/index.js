@@ -3,15 +3,20 @@ import React, {useState} from 'react'
 import Layout from '../components/Layout'
 import Typist from 'react-typist'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
+import { useStateValue } from '../state/state'
 
 const delayTime = 4;
 const SignInArea = dynamic(() => import('../components/SignInArea'), { ssr: false })
 
-const Home = () => {
+const Index = () => {
+  // const [{ dapp }, dispatch] = useStateValue()
+  const stateDis = useStateValue()
   const [speechDone, setSpeechDone] = useState(false)
-  const handleFinishedSpeech = () =>{
+  const handleFinishedSpeech = () => {
     setSpeechDone(true)
   }
+  console.log(stateDis)
   return (
     <Layout>
       <div
@@ -30,9 +35,18 @@ const Home = () => {
             <p>Everyone gets an even share and we will keep you posted on what its worth as we liquidate these fools.</p>
           </Typist>
           {speechDone && (
-            <div className="animate__animated animate__fadeIn">
-              <SignInArea fs={'2rem'} stretch/>
-            </div>
+            dapp.balance ? (
+              <Link href="/dashboard">
+                <a>
+                  <button>Go to Dashboard</button>
+                </a>
+              </Link>
+            ) : (
+              <div className="animate__animated animate__fadeIn">
+                <SignInArea fs={'2rem'} stretch/>
+              </div>
+            )
+            
           )}
         </div>
       </div>
@@ -40,7 +54,7 @@ const Home = () => {
         .landing-container {
           padding: 40px;
           background: rgba(255, 255, 255, 0.7);
-          margin: auto;
+          margin-top: 10rem;
           display: flex;
           flex: 0 0 1000px; 
           align-items: top;
@@ -80,4 +94,4 @@ const Home = () => {
   )
 }
 
-export default Home
+export default Index

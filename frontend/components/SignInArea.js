@@ -39,7 +39,7 @@ const SignInArea = ({stretch, fs}) => {
 
   return (
     <div>
-      {dapp === undefined ? (
+      {dapp.wallet.name === 'TEST' ? (
         <button onClick={handleSignInClick} onKeyUp={handleSignInClick}>
           Sign In
         </button>

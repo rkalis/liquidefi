@@ -189,7 +189,6 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
 
         }
 
-
     /**
      * @notice Sends an amount of the underlying token to the `feeReceiver`
      * based on the `platformFee` and `profit`.

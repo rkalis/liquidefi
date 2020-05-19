@@ -18,7 +18,7 @@ function registerMarketID(uint256 _marketId,address _tokenAddress) external auth
   tokenAddressToMarketId[_tokenAddress] = _marketId;
 }
 
-function borrow(address _tokenAddress, uint256 _tokenAmount) external {
+function flashborrow(address _tokenAddress, uint256 _tokenAmount) external {
 
   ISoloMargin solo = ISoloMargin(soloMarginAddress);
   Info[] memory infos = new Info[](1);

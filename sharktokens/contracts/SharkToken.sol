@@ -169,6 +169,28 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
     }
 
     /**
+    * @notice Liquidate aave positions using uniswap flashswaps
+    * @param collateralAddress The address of the collateral token
+    * @param userAddress The address of the user that gets liquidated
+    * @param purchaseAmount The amount of underlying tokens to use in the liquidation
+    */
+  /*  function flashliquidateOnAave(
+        address collateralAddress,
+        address userAddress,
+        uint256 purchaseAmount,
+        uint256 feePercentage,
+        address feeReceiver,
+        address sender,
+        uint amount0,
+        uint amount1,
+        bytes calldata data) external nonReentrant {
+          require(feePercentage <= maxFee, "Requested fee exceeds maximum");
+          uint256 initialSupply = underlyingSupply();
+
+        }
+
+
+    /**
      * @notice Sends an amount of the underlying token to the `feeReceiver`
      * based on the `platformFee` and `profit`.
      * @param profit The amount of underlying tokens that were made during

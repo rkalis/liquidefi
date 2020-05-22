@@ -9,6 +9,7 @@ import "./lib/aave/ILendingPoolAddressesProvider.sol";
 import "./lib/aave/ILendingPool.sol";
 import "./lib/aave/WadRayMath.sol";
 import "./Uniswapper.sol";
+import "./UniswapperV2.sol";
 
 /**
  * @title SharkToken
@@ -18,7 +19,7 @@ import "./Uniswapper.sol";
  * liquidate loans on popular lending platforms. The profits of these liquidations
  * are shared among the SharkToken holders.
  */
-contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
+contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 {
     uint256 public constant UINT_MAX_VALUE = uint256(-1);
     address public constant ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -131,7 +132,8 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
         address userAddress,
         uint256 purchaseAmount,
         uint256 feePercentage,
-        address feeReceiver
+        address feeReceiver,
+        bool uniswapV2
     ) external nonReentrant {
         require(feePercentage <= maxFee, "Requested fee exceeds maximum");
         uint256 initialSupply = underlyingSupply();
@@ -148,11 +150,10 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
         );
 
         // Swap received collateral back to underlying token
-        if (collateralAddress == ETH_MOCK_ADDRESS) {
-            _swapEthToTokenInput(address(underlying), address(this).balance);
+        if (uniswapV2) {
+            _swapCollateralV2(collateralAddress);
         } else {
-            uint256 swapAmount = IERC20(collateralAddress).balanceOf(address(this));
-            _swapTokenToTokenInput(collateralAddress, address(underlying), swapAmount);
+            _swapCollateral(collateralAddress);
         }
 
         require(underlyingSupply() >= initialSupply, "Need to make a profit");
@@ -160,6 +161,24 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
         uint256 profit = underlyingSupply() - initialSupply;
         _takeFee(profit, feePercentage, feeReceiver);
         emit Liquidated(bytes4(0), userAddress, profit);
+    }
+
+    function _swapCollateral(address collateral) internal returns (uint256) {
+        if (collateral == ETH_MOCK_ADDRESS) {
+            _swapEthToTokenInput(address(underlying), address(this).balance);
+        } else {
+            uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
+            _swapTokenToTokenInput(collateral, address(underlying), swapAmount);
+        }
+    }
+
+    function _swapCollateralV2(address collateral) internal returns (uint256) {
+        if (collateral == ETH_MOCK_ADDRESS) {
+            _swapEthToTokenInputV2(address(underlying), address(this).balance);
+        } else {
+            uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
+            _swapTokenToTokenInputV2(collateral, address(underlying), swapAmount);
+        }
     }
 
     /**

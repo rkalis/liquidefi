@@ -10,13 +10,12 @@ const delayTime = 4;
 const SignInArea = dynamic(() => import('../components/SignInArea'), { ssr: false })
 
 const Index = () => {
-  // const [{ dapp }, dispatch] = useStateValue()
+  const [{ dapp }, dispatch] = useStateValue()
   const stateDis = useStateValue()
   const [speechDone, setSpeechDone] = useState(false)
   const handleFinishedSpeech = () => {
     setSpeechDone(true)
   }
-  console.log(stateDis)
   return (
     <Layout>
       <div
@@ -35,10 +34,10 @@ const Index = () => {
             <p>Everyone gets an even share and we will keep you posted on what its worth as we liquidate these fools.</p>
           </Typist>
           {speechDone && (
-            dapp.balance ? (
+            dapp.balance >= 0 ? (
               <Link href="/dashboard">
                 <a>
-                  <button>Go to Dashboard</button>
+                  <button className="go-to-dash-board">Go to Dashboard</button>
                 </a>
               </Link>
             ) : (
@@ -54,7 +53,7 @@ const Index = () => {
         .landing-container {
           padding: 40px;
           background: rgba(255, 255, 255, 0.7);
-          margin-top: 10rem;
+          margin-top: 2rem;
           display: flex;
           flex: 0 0 1000px; 
           align-items: top;
@@ -70,7 +69,7 @@ const Index = () => {
 
         .ripster {
           transform: scaleX(-1);
-          width: 500px;
+          width: 300px;
         }
 
         @font-face {
@@ -80,6 +79,15 @@ const Index = () => {
           font-style: normal;
         }
 
+        .go-to-dash-board {
+          border-radius: 4px;
+          border: none;
+          color:white;
+          cursor: pointer;
+          padding: 5px 10px;
+          font-size: .8rem;
+          background-color: rgba(0,52,132,1.0);
+        }
 
         .text {
           display: inline-block;

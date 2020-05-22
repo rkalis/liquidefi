@@ -17,7 +17,6 @@ const VideoBG = ({ fade, children }) => (
       html,
       body {
         margin: 0;
-        overflow: hidden;
       }
     `}</style>
     <style jsx>
@@ -30,6 +29,7 @@ const VideoBG = ({ fade, children }) => (
           width: 100%;
           z-index: 10;
           object-fit: cover;
+          overflow: hidden;
         }
         .vid-box .overlay {
           display: flex;

@@ -8,24 +8,21 @@ import daiContractObjSetup from '../utils/daiContractObj'
 
 const ConfirmModal = ({ type, closeModal }) => {
   const [{ dapp }, dispatch] = useStateValue()
-  const [amount, setAmount] = useState(0)
+  const [amount, setAmount] = useState(100)
   const sharkContractObj = sharkContractObjSetup(dapp.web3)  
   const daiContractObj = daiContractObjSetup(dapp.web3)  
 
-  console.log(sharkContractObj)
+  console.log("daiContractObj: ", daiContractObj)
+  console.log("sharkContractObj: ", sharkContractObj)
 
   const handleActionCLick = (e) => {
     e.preventDefault()
     switch (type) {
       case 'deposit':
-        async function submitTx () {
-          const approveDAI = await daiContractObj.methods.approve(sharkAddr, amount)
-          const repsonse = await sharkContractObj.methods.deposit(amount)
-          console.log(approveDAI)
-          console.log(repsonse)
-        }
-        submitTx()
-        
+        const approveDAI = daiContractObj.methods.approve(sharkAddr, amount)
+        const repsonse = sharkContractObj.methods.deposit(amount)
+        console.log("approveDAI: ", approveDAI)
+        console.log("repsonse: ", repsonse)
         break
       case 'withdraw':
         console.log('withdraw')

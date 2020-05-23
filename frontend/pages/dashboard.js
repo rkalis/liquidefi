@@ -40,13 +40,13 @@ const Dashbboard = () => {
       <div className="dashboard">
         <section className="share-area">
           <div className="chart">
-            <PieChart
+            {/* <PieChart
               data={[
                 { name: 'Group A', value: 50 },
                 { name: 'Group B', value: 500 },
               ]}
               baseSize={chartSize}
-            />
+            /> */}
           </div>
           <div className="info-and-actions">
             <h1>Share of Pool Ownership</h1>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStateValue } from '../state/state'
 import camelCaseToWords from '../utils/camelCaseToWords'
 import addrShortener from '../utils/addrShortener'
+import { address, abi } from '../sharktoken-rinkeby'
 
 const ConfirmModal = ({type, closeModal}) => {
   const [{ dapp }, dispatch] = useStateValue()
@@ -12,25 +13,10 @@ const ConfirmModal = ({type, closeModal}) => {
   const handleActionCLick = () => {
     switch (type) {
       case 'deposit':
-        console.log('deposit')
-        setModalState(1)
+        web3.eth.send({ from: dapp.address, to: address, value: web3.utils.toWei('1', ether) })
         break
       case 'withdraw':
         console.log('withdraw')
-        setModalState(1)
-        break
-      default:
-        break
-    }
-  }
-
-  const handleConfirmClick = (e) => {
-    switch (e.target.id) {
-      case 'yes':
-        console.log('yes')
-        break
-      case 'no':
-        console.log('no')
         break
       default:
         break
@@ -56,42 +42,24 @@ const ConfirmModal = ({type, closeModal}) => {
           <div className="border-right"/>
           <button className="closeModal" onClick={handleCloseModal}>X</button>
         </div>
-        {modalState === 0 && (
-          <div className="action-area">
-            <form>
-              <fieldset>
-                <label htmlFor="amount">{camelCaseToWords(type)} Amount</label>
-                <input type="number" name="amount" step="0.01" min="0.00" value={amount} onChange={handleSetAmount}/>
-              </fieldset>
-              <fieldset>
-                <label htmlFor="address">Address</label>
-                <input type="text" value={addrShortener(dapp.address)} disabled />
-              </fieldset>
-              <fieldset>
-                <p>You will {`${type}`}: {500} DAI</p>
-                <button className="form-action-btn" onClick={handleActionCLick}>
-                  {camelCaseToWords(type)}
-                </button>
-              </fieldset>
-            </form>
-          </div>
-        )}
-        {modalState === 1 && (
-          <div className="action-area">
-            <br/>
-            <div style={{textAlign: 'center'}}>
-              <h1>Are you sure?</h1>
-            </div>
-            <div className="confirm-buttons">
-              <button className="yes" onClick={handleConfirmClick} id="yes">
-                YES
+        <div className="action-area">
+          <form>
+            <fieldset>
+              <label htmlFor="amount">{camelCaseToWords(type)} Amount</label>
+              <input type="number" name="amount" step="0.01" min="0.00" value={amount} onChange={handleSetAmount}/>
+            </fieldset>
+            <fieldset>
+              <label htmlFor="address">Address</label>
+              <input type="text" value={addrShortener(dapp.address)} disabled />
+            </fieldset>
+            <fieldset>
+              <p>You will {`${type}`}: {500} DAI</p>
+              <button className="form-action-btn" onClick={handleActionCLick}>
+                {camelCaseToWords(type)}
               </button>
-              <button className="no" onClick={handleCloseModal} id="no">
-                No
-              </button>
-            </div>
-          </div>
-        )}
+            </fieldset>
+          </form>
+        </div>
       </div>
       <div className="modal-overlay"/>
       <style jsx>{`

@@ -81,21 +81,27 @@ const SignInArea = ({stretch, fs}) => {
         .wallet-row,
         .address-row,
         .network-row,
-        .balance-row { display: none; }
-        
-        .address-row { display: block; }
-        .address-row b{ display: none; }
-        
+        .balance-row {
+          display: none;
+        }
+
+        .address-row {
+          display: block;
+        }
+        .address-row b {
+          display: none;
+        }
+
         button {
           border-radius: 4px;
           border: none;
-          color:white;
+          color: white;
           cursor: pointer;
           padding: 5px 10px;
-          font-size: .8rem;
-          background-color: rgba(0,52,132,1.0);
-          width: ${stretch ? '100%' : 'auto' };
-          font-size: ${fs ? fs : 'inherit'}
+          font-size: 0.8rem;
+          background-color: rgba(0, 52, 132, 1);
+          width: ${stretch ? '100%' : 'auto'};
+          font-size: ${fs ? fs : 'inherit'};
         }
       `}</style>
     </div>

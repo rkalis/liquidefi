@@ -9,20 +9,34 @@ import daiContractObjSetup from '../utils/daiContractObj'
 const ConfirmModal = ({ type, closeModal }) => {
   const [{ dapp }, dispatch] = useStateValue()
   const [amount, setAmount] = useState(100)
-  const sharkContractObj = sharkContractObjSetup(dapp.web3)  
-  const daiContractObj = daiContractObjSetup(dapp.web3)  
+  const sharkContractObj = sharkContractObjSetup(dapp.web3)
+  const daiContractObj = daiContractObjSetup(dapp.web3)
 
-  console.log("daiContractObj: ", daiContractObj)
-  console.log("sharkContractObj: ", sharkContractObj)
+  console.log('daiContractObj: ', daiContractObj)
+  console.log('sharkContractObj: ', sharkContractObj)
 
   const handleActionCLick = (e) => {
     e.preventDefault()
+    const BN = dapp.web3.utils.BN;
+
     switch (type) {
       case 'deposit':
-        const approveDAI = daiContractObj.methods.approve(sharkAddr, amount)
-        const repsonse = sharkContractObj.methods.deposit(amount)
-        console.log("approveDAI: ", approveDAI)
-        console.log("repsonse: ", repsonse)
+
+        const submitTx = async () => {
+          
+          const approveDAI = await daiContractObj.methods
+            .approve(sharkAddr, new BN(amount))
+            .send({ from: dapp.address })
+
+          const repsonse = await sharkContractObj.methods
+            .deposit(dapp.web3.utils.toWei(new BN(amount), 'ether'))
+            .send({ from: dapp.address })
+
+          console.log('approveDAI: ', approveDAI)
+          console.log('repsonse: ', repsonse)
+        }
+        submitTx()
+
         break
       case 'withdraw':
         console.log('withdraw')

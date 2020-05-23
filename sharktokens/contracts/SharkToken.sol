@@ -27,14 +27,16 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 
 
     ILendingPoolAddressesProvider private aaveAddressProvider = ILendingPoolAddressesProvider(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
     Iatoken public underlying;
+	IERC20 public daiaddress;
     uint256 public maxFee = 0.8 ether; // 80% (1 ether == 100%)
 
     event Deposited(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Withdrawn(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Liquidated(bytes4 indexed platform, address liquidatedUser, uint256 profit);
 
-    constructor(string memory name, string memory symbol, Iatoken _underlying) ERC20(name, symbol) public {
+    constructor(string memory name, string memory symbol, Iatoken _underlying, IERC20 _daiaddress) ERC20(name, symbol) public {
         underlying = _underlying;
+		daiaddress = _daiaddress;
     }
 
     /**
@@ -137,15 +139,15 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 
     ) external nonReentrant {
         require(feePercentage <= maxFee, "Requested fee exceeds maximum");
         uint256 initialSupply = underlyingSupply();
+		uint256 returnAmount;
 
         // Liquidate on Aave
         ILendingPool lendingPool = ILendingPool(aaveAddressProvider.getLendingPool());
 		underlying.redeem(purchaseAmount);
-		IERC20 tempCollateralAddress = IERC20(collateralAddress);
-        tempCollateralAddress.approve(aaveAddressProvider.getLendingPoolCore(), purchaseAmount);
+        daiaddress.approve(aaveAddressProvider.getLendingPoolCore(), purchaseAmount);
         lendingPool.liquidationCall(
             collateralAddress,
-            collateralAddress,
+            address(daiaddress),
             userAddress,
             purchaseAmount,
             false
@@ -153,11 +155,14 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 
 
         // Swap received collateral back to underlying token
         if (uniswapV2) {
-            _swapCollateralV2(collateralAddress);
+            returnAmount = _swapCollateralV2(collateralAddress);
         } else {
-            _swapCollateral(collateralAddress);
+            returnAmount = _swapCollateral(collateralAddress);
         }
-
+        
+		daiaddress.approve(aaveAddressProvider.getLendingPoolCore(), returnAmount);
+		lendingPool.deposit(address(daiaddress), returnAmount, 0);
+		
         require(underlyingSupply() >= initialSupply, "Need to make a profit");
 
         uint256 profit = underlyingSupply() - initialSupply;
@@ -167,19 +172,19 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 
 
     function _swapCollateral(address collateral) internal returns (uint256) {
         if (collateral == ETH_MOCK_ADDRESS) {
-            _swapEthToTokenInput(address(underlying), address(this).balance);
+            _swapEthToTokenInput(address(daiaddress), address(this).balance);
         } else {
             uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
-            _swapTokenToTokenInput(collateral, address(underlying), swapAmount);
+            _swapTokenToTokenInput(collateral, address(daiaddress), swapAmount);
         }
     }
 
     function _swapCollateralV2(address collateral) internal returns (uint256) {
         if (collateral == ETH_MOCK_ADDRESS) {
-            _swapEthToTokenInputV2(address(underlying), address(this).balance);
+            _swapEthToTokenInputV2(address(daiaddress), address(this).balance);
         } else {
             uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
-            _swapTokenToTokenInputV2(collateral, address(underlying), swapAmount);
+            _swapTokenToTokenInputV2(collateral, address(daiaddress), swapAmount);
         }
     }
 

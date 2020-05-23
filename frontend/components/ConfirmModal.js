@@ -17,7 +17,9 @@ const ConfirmModal = ({ type, closeModal }) => {
 
   const handleActionCLick = (e) => {
     e.preventDefault()
-    const BN = dapp.web3.utils.BN;
+    const utils = dapp.web3.utils
+    const BN = utils.BN;
+    const toWei = utils.toWei
 
     switch (type) {
       case 'deposit':
@@ -25,11 +27,11 @@ const ConfirmModal = ({ type, closeModal }) => {
         const submitTx = async () => {
           
           const approveDAI = await daiContractObj.methods
-            .approve(sharkAddr, new BN(amount))
+            .approve(sharkAddr, amount)
             .send({ from: dapp.address })
 
           const repsonse = await sharkContractObj.methods
-            .deposit(dapp.web3.utils.toWei(new BN(amount), 'ether'))
+            .deposit(toWei(String(amount), 'ether'))
             .send({ from: dapp.address })
 
           console.log('approveDAI: ', approveDAI)

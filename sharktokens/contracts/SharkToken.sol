@@ -5,11 +5,11 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 import "./lib/dappsys/DSAuth.sol";
 import "./lib/aave/ILendingPoolAddressesProvider.sol";
+import "./lib/aave/Iatoken.sol";
 import "./lib/aave/ILendingPool.sol";
 import "./lib/aave/WadRayMath.sol";
 import "./Uniswapper.sol";
-import './interfaces/IWETH.sol';
-import './interfaces/IUniswapV2Router01.sol';
+import "./UniswapperV2.sol";
 
 /**
  * @title SharkToken
@@ -19,27 +19,22 @@ import './interfaces/IUniswapV2Router01.sol';
  * liquidate loans on popular lending platforms. The profits of these liquidations
  * are shared among the SharkToken holders.
  */
-contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
+contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 {
     uint256 public constant UINT_MAX_VALUE = uint256(-1);
     address public constant ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     using WadRayMath for uint256;
 
     ILendingPoolAddressesProvider private aaveAddressProvider = ILendingPoolAddressesProvider(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
-    IERC20 public underlying;
+    Iatoken public underlying;
     uint256 public maxFee = 0.8 ether; // 80% (1 ether == 100%)
-
-    address immutable factory;
-    IWETH immutable WETH;
 
     event Deposited(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Withdrawn(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Liquidated(bytes4 indexed platform, address liquidatedUser, uint256 profit);
 
-    constructor(string memory name, string memory symbol, IERC20 _underlying,address _factory, address router) ERC20(name, symbol) public {
+    constructor(string memory name, string memory symbol, Iatoken _underlying) ERC20(name, symbol) public {
         underlying = _underlying;
-        factory = _factory;
-        WETH = IWETH(IUniswapV2Router01(router).WETH());
     }
 
     /**
@@ -137,28 +132,30 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
         address userAddress,
         uint256 purchaseAmount,
         uint256 feePercentage,
-        address feeReceiver
+        address feeReceiver,
+        bool uniswapV2
     ) external nonReentrant {
         require(feePercentage <= maxFee, "Requested fee exceeds maximum");
         uint256 initialSupply = underlyingSupply();
 
         // Liquidate on Aave
         ILendingPool lendingPool = ILendingPool(aaveAddressProvider.getLendingPool());
-        underlying.approve(aaveAddressProvider.getLendingPoolCore(), purchaseAmount);
+		underlying.redeem(purchaseAmount);
+		IERC20 tempCollateralAddress = IERC20(collateralAddress);
+        tempCollateralAddress.approve(aaveAddressProvider.getLendingPoolCore(), purchaseAmount);
         lendingPool.liquidationCall(
             collateralAddress,
-            address(underlying),
+            collateralAddress,
             userAddress,
             purchaseAmount,
             false
         );
 
         // Swap received collateral back to underlying token
-        if (collateralAddress == ETH_MOCK_ADDRESS) {
-            _swapEthToTokenInput(address(underlying), address(this).balance);
+        if (uniswapV2) {
+            _swapCollateralV2(collateralAddress);
         } else {
-            uint256 swapAmount = IERC20(collateralAddress).balanceOf(address(this));
-            _swapTokenToTokenInput(collateralAddress, address(underlying), swapAmount);
+            _swapCollateral(collateralAddress);
         }
 
         require(underlyingSupply() >= initialSupply, "Need to make a profit");
@@ -168,26 +165,23 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
         emit Liquidated(bytes4(0), userAddress, profit);
     }
 
-    /**
-    * @notice Liquidate aave positions using uniswap flashswaps
-    * @param collateralAddress The address of the collateral token
-    * @param userAddress The address of the user that gets liquidated
-    * @param purchaseAmount The amount of underlying tokens to use in the liquidation
-    */
-  /*  function flashliquidateOnAave(
-        address collateralAddress,
-        address userAddress,
-        uint256 purchaseAmount,
-        uint256 feePercentage,
-        address feeReceiver,
-        address sender,
-        uint amount0,
-        uint amount1,
-        bytes calldata data) external nonReentrant {
-          require(feePercentage <= maxFee, "Requested fee exceeds maximum");
-          uint256 initialSupply = underlyingSupply();
-
+    function _swapCollateral(address collateral) internal returns (uint256) {
+        if (collateral == ETH_MOCK_ADDRESS) {
+            _swapEthToTokenInput(address(underlying), address(this).balance);
+        } else {
+            uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
+            _swapTokenToTokenInput(collateral, address(underlying), swapAmount);
         }
+    }
+
+    function _swapCollateralV2(address collateral) internal returns (uint256) {
+        if (collateral == ETH_MOCK_ADDRESS) {
+            _swapEthToTokenInputV2(address(underlying), address(this).balance);
+        } else {
+            uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
+            _swapTokenToTokenInputV2(collateral, address(underlying), swapAmount);
+        }
+    }
 
     /**
      * @notice Sends an amount of the underlying token to the `feeReceiver`

@@ -14,8 +14,6 @@ const ConfirmModal = ({ type, closeModal }) => {
 
   console.log('daiContractObj: ', daiContractObj)
   console.log('sharkContractObj: ', sharkContractObj)
-  
-  console.log('hi')
 
   const handleActionCLick = (e) => {
     e.preventDefault()

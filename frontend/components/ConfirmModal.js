@@ -12,8 +12,6 @@ const ConfirmModal = ({ type, closeModal }) => {
   const sharkContractObj = sharkContractObjSetup(dapp.web3)
   const daiContractObj = daiContractObjSetup(dapp.web3)
 
-  100000000000000000000
-
   console.log('daiContractObj: ', daiContractObj)
   console.log('sharkContractObj: ', sharkContractObj)
 

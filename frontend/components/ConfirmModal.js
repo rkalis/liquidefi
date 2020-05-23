@@ -12,26 +12,26 @@ const ConfirmModal = ({ type, closeModal }) => {
   const sharkContractObj = sharkContractObjSetup(dapp.web3)
   const daiContractObj = daiContractObjSetup(dapp.web3)
 
+  100000000000000000000
+
   console.log('daiContractObj: ', daiContractObj)
   console.log('sharkContractObj: ', sharkContractObj)
 
   const handleActionCLick = (e) => {
     e.preventDefault()
     const utils = dapp.web3.utils
-    const BN = utils.BN;
+    const BN = utils.BN
     const toWei = utils.toWei
 
     switch (type) {
       case 'deposit':
-
         const submitTx = async () => {
-          
           const approveDAI = await daiContractObj.methods
             .approve(sharkAddr, amount)
             .send({ from: dapp.address })
 
           const repsonse = await sharkContractObj.methods
-            .deposit(toWei(String(amount), 'ether'))
+            .deposit(toWei(String(amount)))
             .send({ from: dapp.address })
 
           console.log('approveDAI: ', approveDAI)

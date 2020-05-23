@@ -1,4 +1,3 @@
-
 pragma solidity ^0.6.0;
 
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
@@ -6,9 +5,11 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 import "./lib/dappsys/DSAuth.sol";
 import "./lib/aave/ILendingPoolAddressesProvider.sol";
+import "./lib/aave/Iatoken.sol";
 import "./lib/aave/ILendingPool.sol";
 import "./lib/aave/WadRayMath.sol";
 import "./Uniswapper.sol";
+import "./UniswapperV2.sol";
 
 /**
  * @title SharkToken
@@ -18,22 +19,24 @@ import "./Uniswapper.sol";
  * liquidate loans on popular lending platforms. The profits of these liquidations
  * are shared among the SharkToken holders.
  */
-contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
+contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 {
     uint256 public constant UINT_MAX_VALUE = uint256(-1);
     address public constant ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     using WadRayMath for uint256;
 
     ILendingPoolAddressesProvider private aaveAddressProvider = ILendingPoolAddressesProvider(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
-    IERC20 public underlying;
+    Iatoken public underlying;
+    IERC20 public daiAddress;
     uint256 public maxFee = 0.8 ether; // 80% (1 ether == 100%)
 
     event Deposited(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Withdrawn(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Liquidated(bytes4 indexed platform, address liquidatedUser, uint256 profit);
 
-    constructor(string memory name, string memory symbol, IERC20 _underlying) ERC20(name, symbol) public {
+    constructor(string memory name, string memory symbol, Iatoken _underlying, IERC20 _daiAddress) ERC20(name, symbol) public {
         underlying = _underlying;
+        daiAddress = _daiAddress;
     }
 
     /**
@@ -104,7 +107,10 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
     function deposit(uint256 amount) external nonReentrant {
         uint256 mintAmount = toSharkToken(amount);
         _mint(msg.sender, mintAmount);
-        underlying.transferFrom(msg.sender, address(this), amount);
+        ILendingPool lendingPool = ILendingPool(aaveAddressProvider.getLendingPool());
+        daiAddress.transferFrom(msg.sender, address(this), amount);
+        daiAddress.approve(aaveAddressProvider.getLendingPoolCore(), amount);
+        lendingPool.deposit(address(daiAddress), amount, 0); // referral is 0
         emit Deposited(msg.sender, amount, mintAmount);
     }
 
@@ -116,7 +122,9 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
     function withdraw(uint256 amount) external nonReentrant {
         uint256 transferAmount = fromSharkToken(amount);
         _burn(msg.sender, amount);
-        underlying.transfer(msg.sender, transferAmount);
+        ILendingPool lendingPool = ILendingPool(aaveAddressProvider.getLendingPool());
+		underlying.redeem(transferAmount);
+        daiAddress.transfer(msg.sender, transferAmount);
         emit Withdrawn(msg.sender, transferAmount, amount);
     }
 
@@ -131,35 +139,60 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper {
         address userAddress,
         uint256 purchaseAmount,
         uint256 feePercentage,
-        address feeReceiver
+        address feeReceiver,
+        bool uniswapV2
     ) external nonReentrant {
         require(feePercentage <= maxFee, "Requested fee exceeds maximum");
         uint256 initialSupply = underlyingSupply();
+        uint256 returnAmount;
 
         // Liquidate on Aave
         ILendingPool lendingPool = ILendingPool(aaveAddressProvider.getLendingPool());
-        underlying.approve(aaveAddressProvider.getLendingPoolCore(), purchaseAmount);
+		underlying.redeem(purchaseAmount);
+        daiAddress.approve(aaveAddressProvider.getLendingPoolCore(), purchaseAmount);
         lendingPool.liquidationCall(
             collateralAddress,
-            address(underlying),
+            address(daiAddress),
             userAddress,
             purchaseAmount,
             false
         );
 
         // Swap received collateral back to underlying token
-        if (collateralAddress == ETH_MOCK_ADDRESS) {
-            _swapEthToTokenInput(address(underlying), address(this).balance);
+        if (uniswapV2) {
+            returnAmount = _swapCollateralV2(collateralAddress);
         } else {
-            uint256 swapAmount = IERC20(collateralAddress).balanceOf(address(this));
-            _swapTokenToTokenInput(collateralAddress, address(underlying), swapAmount);
+            returnAmount = _swapCollateral(collateralAddress);
         }
+
+        daiAddress.approve(aaveAddressProvider.getLendingPoolCore(), returnAmount);
+        lendingPool.deposit(address(daiAddress), returnAmount, 0);
 
         require(underlyingSupply() >= initialSupply, "Need to make a profit");
 
         uint256 profit = underlyingSupply() - initialSupply;
         _takeFee(profit, feePercentage, feeReceiver);
         emit Liquidated(bytes4(0), userAddress, profit);
+    }
+
+    function _swapCollateral(address collateral) internal returns (uint256) {
+        if (collateral == ETH_MOCK_ADDRESS) {
+            return _swapEthToTokenInput(address(daiAddress), address(this).balance);
+        } else {
+            uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
+            return _swapTokenToTokenInput(collateral, address(daiAddress), swapAmount);
+        }
+    }
+
+    function _swapCollateralV2(address collateral) internal returns (uint256) {
+        if (collateral == ETH_MOCK_ADDRESS) {
+            uint256[] tokenAmounts = _swapEthToTokenInputV2(address(daiAddress), address(this).balance);
+            return tokenAmounts[1];
+        } else {
+            uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
+            uint256[] tokenAmounts = _swapTokenToTokenInputV2(collateral, address(daiAddress), swapAmount);
+            return tokenAmounts[1];
+        }
     }
 
     /**

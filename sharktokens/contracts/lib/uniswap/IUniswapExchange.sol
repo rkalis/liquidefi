@@ -1,8 +1,6 @@
 pragma solidity ^0.6.0;
 
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-
-interface IUniswapExchange is IERC20 {
+interface IUniswapExchange{
     // Address of ERC20 token sold on this exchange
     function tokenAddress() external view returns (address token);
     // Address of Uniswap Factory

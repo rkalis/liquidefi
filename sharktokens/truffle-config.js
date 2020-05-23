@@ -37,11 +37,18 @@ module.exports = {
       },
       network_id: 5,
       gas: 10000000
+    },
+    ropsten: {
+      provider: function() {
+        return new HDWalletProvider(`${process.env.MNEMONIC}`, `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`)
+      },
+      network_id: 3,
+      gas: 8000000
     }
   },
   compilers: {
     solc: {
-      version: "0.6.0"
+      version: "0.6.6"
     }
   },
   plugins: [

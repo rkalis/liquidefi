@@ -186,11 +186,11 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 
 
     function _swapCollateralV2(address collateral) internal returns (uint256) {
         if (collateral == ETH_MOCK_ADDRESS) {
-            uint256[] tokenAmounts = _swapEthToTokenInputV2(address(daiAddress), address(this).balance);
+            uint256[] memory tokenAmounts = _swapEthToTokenInputV2(address(daiAddress), address(this).balance);
             return tokenAmounts[1];
         } else {
             uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
-            uint256[] tokenAmounts = _swapTokenToTokenInputV2(collateral, address(daiAddress), swapAmount);
+            uint256[] memory tokenAmounts = _swapTokenToTokenInputV2(collateral, address(daiAddress), swapAmount);
             return tokenAmounts[1];
         }
     }

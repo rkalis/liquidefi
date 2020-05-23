@@ -1,6 +1,7 @@
 import { useStateValue } from '../state/state'
 import getOnboard from '../utils/Onboarding'
 import addrShortener from '../utils/addrShortener'
+import Web3 from 'web3'
 
 const SignInArea = ({stretch, fs}) => {
   const [{ dapp }, dispatch] = useStateValue()
@@ -25,9 +26,14 @@ const SignInArea = ({stretch, fs}) => {
       })
     },
     wallet: (wallet) => {
+      let web3 = new Web3(wallet.provider)
       dispatch({
         type: 'SET_WALLET',
         payload: wallet,
+      })
+      dispatch({
+        type: 'SET_WEB3',
+        payload: web3,
       })
     },
   })

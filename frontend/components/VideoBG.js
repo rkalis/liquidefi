@@ -3,9 +3,9 @@ import React from 'react'
 
 const VideoBG = ({ fade, children }) => (
   <div className="vid-box">
-    <video loop="loop" muted={true} autoPlay="autoplay" poster="">
+    {/* <video loop="loop" muted={true} autoPlay="autoplay" poster="">
       <source src="videos/aquarium.mp4" type="video/mp4" />
-    </video>
+    </video> */}
     {/* <iframe
       frameBorder="0"
       height="100%"

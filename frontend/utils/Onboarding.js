@@ -11,7 +11,7 @@ const getOnboard = function (subscriptions) {
       dappId: BLOCKNATIVE_KEY,
       subscriptions,
       hideBranding: true,
-      networkId: 4,
+      networkId: 3,
       walletSelect: {
         wallets: [
           { walletName: 'metamask', preferred: true },

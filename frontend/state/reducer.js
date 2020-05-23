@@ -14,6 +14,9 @@ function dappReducer(state = {}, action) {
     case 'SET_WALLET':
       newState.wallet = action.payload
       return { ...state, ...newState }
+    case 'SET_WEB3':
+      newState.web3 = action.payload
+      return { ...state, ...newState }
     default:
       return state
   }

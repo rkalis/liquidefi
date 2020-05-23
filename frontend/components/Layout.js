@@ -4,24 +4,15 @@ import Head from 'next/head'
 import Header from './Header'
 import VideoBG from './VideoBG'
 
-// STATE
-import { StateProvider } from '../state/state'
-import InitialState from '../state/initialState'
-import Reducer from '../state/reducer'
-
 const Layout = ({ pageTitle = 'LiquiDefi', children }) => (
   <>
     <Head>
       <title>{pageTitle}</title>
       <link rel="icon" href="/favicon.ico" />
     </Head>
-    <StateProvider initialState={InitialState} reducer={Reducer}>
-      <VideoBG fade="0">
-        <Header />
-        <main role="main">
-          {children}
-        </main>
-      </VideoBG>
+    <VideoBG fade="0">
+      <Header />
+      <main role="main">{children}</main>
       <style jsx global>{`
         // Defaults
         *,
@@ -104,6 +95,7 @@ const Layout = ({ pageTitle = 'LiquiDefi', children }) => (
           body {
             background: #333;
             color: white;
+            overflow-x: hidden;
           }
           main {
             height: 100%;
@@ -123,7 +115,7 @@ const Layout = ({ pageTitle = 'LiquiDefi', children }) => (
           }
         `}
       </style>
-    </StateProvider>
+    </VideoBG>
   </>
 )
 

@@ -3,43 +3,48 @@ import { useStateValue } from '../state/state'
 import camelCaseToWords from '../utils/camelCaseToWords'
 import addrShortener from '../utils/addrShortener'
 import sharkContractObjSetup from '../utils/sharkContractObj'
-import { address as sharkAddr } from '../sharktoken-deployed'
 import daiContractObjSetup from '../utils/daiContractObj'
+import { address as sharkAddr } from '../sharktoken-deployed'
 
 const ConfirmModal = ({ type, closeModal }) => {
   const [{ dapp }, dispatch] = useStateValue()
   const [amount, setAmount] = useState(100)
-  const sharkContractObj = sharkContractObjSetup(dapp.web3)
+  const sharkContractObj = sharkContractObjSetup()
   const daiContractObj = daiContractObjSetup(dapp.web3)
+  const tokenamount = dapp.web3.utils.toBN(amount)
+  const finalamount = dapp.web3.utils.toWei(tokenamount,"ether")
 
+  console.log(dapp)
   console.log('daiContractObj: ', daiContractObj)
   console.log('sharkContractObj: ', sharkContractObj)
 
   const handleActionCLick = (e) => {
     e.preventDefault()
-    const utils = dapp.web3.utils
-    const BN = utils.BN
-    const toWei = utils.toWei
 
     switch (type) {
       case 'deposit':
-        const submitTx = async () => {
-          const approveDAI = await daiContractObj.methods
-            .approve(sharkAddr, amount)
-            .send({ from: dapp.address })
+        async function submitDeposit () {
+          const userallowance = await daiContractObj.methods.allowance(dapp.address,sharkAddr).call({from: dapp.address})
+          console.log(userallowance)
+          if (finalamount >= userallowance) {
+            await daiContractObj.methods.approve(sharkAddr, finalamount).send({from: dapp.address}) 
+            await sharkContractObj.methods.deposit(finalamount).send({from: dapp.address})
+          } else await sharkContractObj.methods.deposit(finalamount).send({from: dapp.address})
 
-          const repsonse = await sharkContractObj.methods
-            .deposit(toWei(String(amount)))
-            .send({ from: dapp.address })
-
-          console.log('approveDAI: ', approveDAI)
-          console.log('repsonse: ', repsonse)
+          const sharktotalsupply = await sharkContractObj.methods.totalSupply().call({from: dapp.address})
+          console.log(sharktotalsupply)
+          const usertotalsupply = await sharkContractObj.methods.balanceOf(dapp.address).call({from: dapp.address})
+          console.log(usertotalsupply)
+          
         }
-        submitTx()
-
+        submitDeposit()
         break
       case 'withdraw':
-        console.log('withdraw')
+        async function submitWithdrawal () {
+          const withdrawresponse = await sharkContractObj.methods.withdraw(finalamount).send({from: dapp.address})
+            console.log(withdrawresponse)
+        }
+        submitWithdrawal()
         break
       default:
         break

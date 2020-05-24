@@ -27,26 +27,16 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 
 
     ILendingPoolAddressesProvider private aaveAddressProvider = ILendingPoolAddressesProvider(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
     Iatoken public underlying;
-<<<<<<< HEAD
-	IERC20 public daiaddress;
-=======
     IERC20 public daiAddress;
->>>>>>> f0426c886cceab23ec2fba7d0a55afde47939a9f
     uint256 public maxFee = 0.8 ether; // 80% (1 ether == 100%)
 
     event Deposited(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Withdrawn(address indexed account, uint256 tokenAmount, uint256 sharkTokenAmount);
     event Liquidated(bytes4 indexed platform, address liquidatedUser, uint256 profit);
 
-<<<<<<< HEAD
-    constructor(string memory name, string memory symbol, Iatoken _underlying, IERC20 _daiaddress) ERC20(name, symbol) public {
-        underlying = _underlying;
-		daiaddress = _daiaddress;
-=======
     constructor(string memory name, string memory symbol, Iatoken _underlying, IERC20 _daiAddress) ERC20(name, symbol) public {
         underlying = _underlying;
         daiAddress = _daiAddress;
->>>>>>> f0426c886cceab23ec2fba7d0a55afde47939a9f
     }
 
     /**
@@ -154,26 +144,15 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 
     ) external nonReentrant {
         require(feePercentage <= maxFee, "Requested fee exceeds maximum");
         uint256 initialSupply = underlyingSupply();
-<<<<<<< HEAD
-		uint256 returnAmount;
-=======
         uint256 returnAmount;
->>>>>>> f0426c886cceab23ec2fba7d0a55afde47939a9f
 
         // Liquidate on Aave
         ILendingPool lendingPool = ILendingPool(aaveAddressProvider.getLendingPool());
 		underlying.redeem(purchaseAmount);
-<<<<<<< HEAD
-        daiaddress.approve(aaveAddressProvider.getLendingPoolCore(), purchaseAmount);
-        lendingPool.liquidationCall(
-            collateralAddress,
-            address(daiaddress),
-=======
         daiAddress.approve(aaveAddressProvider.getLendingPoolCore(), purchaseAmount);
         lendingPool.liquidationCall(
             collateralAddress,
             address(daiAddress),
->>>>>>> f0426c886cceab23ec2fba7d0a55afde47939a9f
             userAddress,
             purchaseAmount,
             false
@@ -185,17 +164,10 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 
         } else {
             returnAmount = _swapCollateral(collateralAddress);
         }
-<<<<<<< HEAD
-        
-		daiaddress.approve(aaveAddressProvider.getLendingPoolCore(), returnAmount);
-		lendingPool.deposit(address(daiaddress), returnAmount, 0);
-		
-=======
 
         daiAddress.approve(aaveAddressProvider.getLendingPoolCore(), returnAmount);
         lendingPool.deposit(address(daiAddress), returnAmount, 0);
 
->>>>>>> f0426c886cceab23ec2fba7d0a55afde47939a9f
         require(underlyingSupply() >= initialSupply, "Need to make a profit");
 
         uint256 profit = underlyingSupply() - initialSupply;
@@ -205,35 +177,21 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 
 
     function _swapCollateral(address collateral) internal returns (uint256) {
         if (collateral == ETH_MOCK_ADDRESS) {
-<<<<<<< HEAD
-            _swapEthToTokenInput(address(daiaddress), address(this).balance);
-        } else {
-            uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
-            _swapTokenToTokenInput(collateral, address(daiaddress), swapAmount);
-=======
             return _swapEthToTokenInput(address(daiAddress), address(this).balance);
         } else {
             uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
             return _swapTokenToTokenInput(collateral, address(daiAddress), swapAmount);
->>>>>>> f0426c886cceab23ec2fba7d0a55afde47939a9f
         }
     }
 
     function _swapCollateralV2(address collateral) internal returns (uint256) {
         if (collateral == ETH_MOCK_ADDRESS) {
-<<<<<<< HEAD
-            _swapEthToTokenInputV2(address(daiaddress), address(this).balance);
-        } else {
-            uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
-            _swapTokenToTokenInputV2(collateral, address(daiaddress), swapAmount);
-=======
             uint256[] memory tokenAmounts = _swapEthToTokenInputV2(address(daiAddress), address(this).balance);
             return tokenAmounts[1];
         } else {
             uint256 swapAmount = IERC20(collateral).balanceOf(address(this));
             uint256[] memory tokenAmounts = _swapTokenToTokenInputV2(collateral, address(daiAddress), swapAmount);
             return tokenAmounts[1];
->>>>>>> f0426c886cceab23ec2fba7d0a55afde47939a9f
         }
     }
 

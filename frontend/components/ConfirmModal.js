@@ -6,29 +6,16 @@ import sharkContractObjSetup from '../utils/sharkContractObj'
 import daiContractObjSetup from '../utils/daiContractObj'
 import { address as sharkAddr } from '../sharktoken-deployed'
 
-// import Notify from "bnc-notify"
-// var notify = Notify({
-//   dappId: apiKey,       // [String] The API key created by step one above
-//   networkId: networkId  // [Integer] The Ethereum network ID your Dapp uses.
-// });
-
 const ConfirmModal = ({ type, closeModal }) => {
   const [{ dapp }, dispatch] = useStateValue()
-  
+
   const [amount, setAmount] = useState(0)
-  const [confirmed, setConfirmed] = useState(false)
-  
+
   const sharkContractObj = sharkContractObjSetup(dapp.web3)
   const daiContractObj = daiContractObjSetup(dapp.web3)
-  
+
   const tokenamount = dapp.web3.utils.toBN(amount)
   const finalamount = dapp.web3.utils.toWei(tokenamount, 'ether')
-
-  
-
-  console.log({dapp})
-  console.log('daiContractObj: ', daiContractObj)
-  console.log('sharkContractObj: ', sharkContractObj)
 
   const handleActionCLick = (e) => {
     e.preventDefault()
@@ -44,29 +31,56 @@ const ConfirmModal = ({ type, closeModal }) => {
           if (finalamount > userallowance) {
             await daiContractObj.methods
               .approve(sharkAddr, finalamount)
-              .send({ from: dapp.address }).on('receipt',(hash) => {
-                console.log('mined')
-                setConfirmed(true)
-                console.log({hash})
-                // notify.hash(hash)
+              .send({ from: dapp.address })
+              .on('transactionHash', function (hash) {
+                dispatch({
+                  type: 'SET_CURRENTLY_MINING',
+                  payload: true,
+                })
+              })
+              .on('receipt', (hash) => {
+                console.log('approve')
+                console.log({ hash })
+                dispatch({
+                  type: 'SET_CURRENTLY_MINING',
+                  payload: false,
+                })
               })
             console.log(userallowance)
             await sharkContractObj.methods
               .deposit(finalamount)
-              .send({ from: dapp.address }).on('receipt',(hash) => {
+              .send({ from: dapp.address })
+              .on('transactionHash', function (hash) {
+                dispatch({
+                  type: 'SET_CURRENTLY_MINING',
+                  payload: true,
+                })
+              })
+              .on('receipt', (hash) => {
                 console.log('deposit')
-                setConfirmed(true)
-                console.log({hash})
-                // notify.hash(hash)
+                console.log({ hash })
+                dispatch({
+                  type: 'SET_CURRENTLY_MINING',
+                  payload: false,
+                })
               })
           } else {
             await sharkContractObj.methods
               .deposit(finalamount)
-              .send({ from: dapp.address }).on('receipt',(hash) => {
+              .send({ from: dapp.address })
+              .on('transactionHash', function(hash){
+                dispatch({
+                  type: "SET_CURRENTLY_MINING",
+                  payload: true
+                })
+              })
+              .on('receipt', (hash) => {
                 console.log('else deposit')
-                setConfirmed(true)
-                console.log({hash})
-                // notify.hash(hash)
+                console.log({ hash })
+                dispatch({
+                  type: 'SET_CURRENTLY_MINING',
+                  payload: false,
+                })
               })
           }
 
@@ -74,19 +88,19 @@ const ConfirmModal = ({ type, closeModal }) => {
             .totalSupply()
             .call({ from: dapp.address })
 
-            dispatch({
-              type: 'SET_SHARK_TOTAL_SUPPLY',
-              payload: sharktotalsupply
-            })
+          dispatch({
+            type: 'SET_SHARK_TOTAL_SUPPLY',
+            payload: sharktotalsupply,
+          })
 
           const usertotalsupply = await sharkContractObj.methods
             .balanceOf(dapp.address)
             .call({ from: dapp.address })
 
-            dispatch({
-              type: 'SET_SHARK_USER_BALANCE',
-              payload: usertotalsupply
-            })
+          dispatch({
+            type: 'SET_SHARK_USER_BALANCE',
+            payload: usertotalsupply,
+          })
         }
         submitDeposit()
         closeModal()
@@ -96,25 +110,40 @@ const ConfirmModal = ({ type, closeModal }) => {
           const withdrawresponse = await sharkContractObj.methods
             .withdraw(finalamount)
             .send({ from: dapp.address })
+            .on('transactionHash', function(hash){
+              dispatch({
+                type: "SET_CURRENTLY_MINING",
+                payload: true
+              })
+            })
+            .on('receipt', (hash) => {
+              console.log('withdraw')
+              console.log({ hash })
+              dispatch({
+                type: 'SET_CURRENTLY_MINING',
+                payload: false,
+              })
+            })
+
           console.log(withdrawresponse)
 
-            const sharktotalsupply = await sharkContractObj.methods
+          const sharktotalsupply = await sharkContractObj.methods
             .totalSupply()
             .call({ from: dapp.address })
 
-            dispatch({
-              type: 'SET_SHARK_TOTAL_SUPPLY',
-              payload: sharktotalsupply
-            })
+          dispatch({
+            type: 'SET_SHARK_TOTAL_SUPPLY',
+            payload: sharktotalsupply,
+          })
 
           const usertotalsupply = await sharkContractObj.methods
             .balanceOf(dapp.address)
             .call({ from: dapp.address })
 
-            dispatch({
-              type: 'SET_SHARK_USER_BALANCE',
-              payload: usertotalsupply
-            })
+          dispatch({
+            type: 'SET_SHARK_USER_BALANCE',
+            payload: usertotalsupply,
+          })
         }
         submitWithdrawal()
         closeModal()
@@ -166,7 +195,9 @@ const ConfirmModal = ({ type, closeModal }) => {
               <p>
                 You will {`${type}`}: {500} DAI
               </p>
-              <button className="form-action-btn" onClick={handleActionCLick}
+              <button
+                className="form-action-btn"
+                onClick={handleActionCLick}
                 disabled={amount === 0}
               >
                 {camelCaseToWords(type)}

@@ -59,6 +59,7 @@ const Dashbboard = () => {
   return (
     <Layout>
       <div className="dashboard">
+        {dapp.currentlyMining && <span className="mining-indicator">Mining</span> }
         <section className="share-area">
           <div className="chart">
             {dapp.sharkTotalSupply !== undefined && dapp.sharkuserBalance !== undefined && (
@@ -161,6 +162,12 @@ const Dashbboard = () => {
           margin: 5rem;
           padding: 2rem;
           border-radius: 10px;
+          position: relative;
+        }
+        .mining-indicator {
+          position: absolute;
+          top: 10px;
+          left: 10px;
         }
         .share-area {
           display: flex;

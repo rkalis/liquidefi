@@ -61,16 +61,12 @@ const Index = () => {
             <p>All yas gotta do is put some DAI in the pool, and our bots will do the rest.</p>
             <p>Everyone gets an even share and we will keep you posted on what its worth as we liquidate these fools.</p>
           </Typist>
-          {speechDone && dapp.balance >= 0 ? (
+          {speechDone && dapp.balance >= 0 && (
               <Link href="/dashboard">
                 <a>
                   <button className="go-to-dash-board">Go to Dashboard</button>
                 </a>
               </Link>
-            ) : (
-              <div className="animate__animated animate__fadeIn">
-                <SignInArea fs={'2rem'} stretch/>
-              </div>
             )
           }
         </div>

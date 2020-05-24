@@ -26,6 +26,9 @@ function dappReducer(state = {}, action) {
     case 'SET_USERS_TOKEN_VALUE_IN_DAI':
       newState.daiValueofYourSharkTokens = action.payload
       return { ...state, ...newState }
+    case 'SET_CURRENTLY_MINING':
+      newState.currentlyMining = action.payload
+      return { ...state, ...newState }
     default:
       return state
   }

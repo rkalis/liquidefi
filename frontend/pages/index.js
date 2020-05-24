@@ -1,21 +1,49 @@
 // REACT & NEXT
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import Layout from '../components/Layout'
 import Typist from 'react-typist'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useStateValue } from '../state/state'
+import sharkContractObjSetup from '../utils/sharkContractObj'
 
 const delayTime = 4;
 const SignInArea = dynamic(() => import('../components/SignInArea'), { ssr: false })
 
 const Index = () => {
   const [{ dapp }, dispatch] = useStateValue()
-  const stateDis = useStateValue()
   const [speechDone, setSpeechDone] = useState(false)
-  const handleFinishedSpeech = () => {
-    setSpeechDone(true)
-  }
+  const handleFinishedSpeech = () => setSpeechDone(true)
+
+  useEffect(() => {
+    if(dapp.web3 !== undefined && dapp.address !== undefined) {
+      const sharkContractObj = sharkContractObjSetup(dapp.web3)
+
+      const myAsync = async function () {
+        if(dapp.address) {
+          const sharktotalsupply = await sharkContractObj.methods
+            .totalSupply()
+            .call({ from: dapp.address })
+      
+            dispatch({
+              type: 'SET_SHARK_TOTAL_SUPPLY',
+              payload: sharktotalsupply
+            })
+      
+          const usertotalsupply = await sharkContractObj.methods
+            .balanceOf(dapp.address)
+            .call({ from: dapp.address })
+      
+            dispatch({
+              type: 'SET_SHARK_USER_BALANCE',
+              payload: usertotalsupply
+            })
+        }
+      }
+      myAsync()
+    }
+  }, [dapp.web3, dapp.address])
+
   return (
     <Layout>
       <div
@@ -23,31 +51,23 @@ const Index = () => {
         style={{ '--animate-duration': `${delayTime}s` }}
       >
         <div className="image-container">
-          {/* <img className="ripster" src="images/ripster.png" alt="ripster" /> */}
+          <img className="ripster" src="images/ripster.png" alt="ripster" />
         </div>
         <div className="text">
-          {/* <Typist cursor={{ show: false }} stdTypingDelay={0} avgTypingDelay={60} onTypingDone={handleFinishedSpeech}>
+          <Typist cursor={{ show: false }} stdTypingDelay={0} avgTypingDelay={60} onTypingDone={handleFinishedSpeech}>
             <Typist.Delay ms={delayTime*1000} />
             <h1>Hey Kid</h1>
             <p>Join up with the sharks and we can get all the liquidity you need buddy!</p>
             <p>All yas gotta do is put some DAI in the pool, and our bots will do the rest.</p>
             <p>Everyone gets an even share and we will keep you posted on what its worth as we liquidate these fools.</p>
-          </Typist> */}
-          {
-            /* {speechDone && ( */
-            dapp.balance >= 0 ? (
+          </Typist>
+          {speechDone && dapp.balance >= 0 && (
               <Link href="/dashboard">
                 <a>
                   <button className="go-to-dash-board">Go to Dashboard</button>
                 </a>
               </Link>
-            ) : (
-              <div className="animate__animated animate__fadeIn">
-                <SignInArea fs={'2rem'} stretch/>
-              </div>
             )
-            
-            //)
           }
         </div>
       </div>

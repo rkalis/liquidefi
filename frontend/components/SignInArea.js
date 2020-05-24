@@ -1,9 +1,10 @@
 import { useStateValue } from '../state/state'
 import getOnboard from '../utils/Onboarding'
 import addrShortener from '../utils/addrShortener'
+import Link from 'next/link'
 import Web3 from 'web3'
 
-const SignInArea = ({stretch, fs}) => {
+const SignInArea = ({ stretch, fs }) => {
   const [{ dapp }, dispatch] = useStateValue()
 
   const onboard = getOnboard({
@@ -44,58 +45,36 @@ const SignInArea = ({stretch, fs}) => {
   }
 
   return (
-    <div>
-      {dapp.wallet.name === 'TEST' ? (
-        <button onClick={handleSignInClick} onKeyUp={handleSignInClick}>
-          Sign In
-        </button>
-      ) : (
-        <table>
-          <tbody>
-            <tr className="wallet-row">
-              <td>
-                <b>Wallet:</b>
-              </td>
-              <td>{dapp.wallet.name}</td>
-            </tr>
-            <tr className="address-row">
-              <td>
-                <b>Address:</b>
-              </td>
-              <td>{dapp.address && addrShortener(dapp.address)}</td>
-            </tr>
-            <tr className="network-row">
-              <td>
-                <b>Network:</b>
-              </td>
-              <td>{dapp.network}</td>
-            </tr>
-            <tr className="balance-row">
-              <td>
-                <b>Balance:</b>
-              </td>
-              <td>
-                {dapp.balance &&
-                  String(web3.fromWei(dapp.balance, 'ether')).substring(0, 5)}{' '}
-                ETH
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      )}
+    <div className="sign-in-wrap">
+      {
+        dapp.balance < 0  ? (
+          <button onClick={handleSignInClick} onKeyUp={handleSignInClick}>
+            Sign In
+          </button>
+        ) : (
+          <>
+            <div className="dashboard-btn-wrap">
+              <Link href="/dashboard">
+                <a>
+                  <button className="go-to-dash-board">Go to Dashboard</button>
+                </a>
+              </Link>
+            </div>
+            <div className="wallet-addr">
+              {
+                dapp.address && addrShortener(dapp.address)
+              }
+            </div>
+          </>
+        )
+      }
       <style jsx>{`
-        .wallet-row,
-        .address-row,
-        .network-row,
-        .balance-row {
-          display: none;
+        .sign-in-wrap{
+          display: flex;
+          align-items: center;
         }
-
-        .address-row {
-          display: block;
-        }
-        .address-row b {
-          display: none;
+        .dashboard-btn-wrap {
+          margin-right: 20px;
         }
 
         button {

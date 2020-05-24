@@ -8,39 +8,145 @@ import { address as sharkAddr } from '../sharktoken-deployed'
 
 const ConfirmModal = ({ type, closeModal }) => {
   const [{ dapp }, dispatch] = useStateValue()
+
+  const [amount, setAmount] = useState(0)
+
+  const sharkContractObj = sharkContractObjSetup(dapp.web3)
+  const daiContractObj = daiContractObjSetup(dapp.web3)
+
   const tokenamount = dapp.web3.utils.toBN(amount)
-  const finalamount = dapp.web3.utils.toWei(tokenamount,"ether")
-  
+  const finalamount = dapp.web3.utils.toWei(tokenamount, 'ether')
+
   const handleActionCLick = (e) => {
     e.preventDefault()
 
     switch (type) {
       case 'deposit':
-        async function submitDeposit () {
-          const userallowance = await daiContractObj.methods.allowance(dapp.address,sharkAddr).call({from: dapp.address})
+        async function submitDeposit() {
+          let userallowance = await daiContractObj.methods
+            .allowance(dapp.address, sharkAddr)
+            .call({ from: dapp.address })
           userallowance = dapp.web3.utils.toBN(userallowance)
-          userallowance = dapp.web3.utils.toWei(userallowance,"ether")
+          userallowance = dapp.web3.utils.toWei(userallowance, 'ether')
           if (finalamount > userallowance) {
-            await daiContractObj.methods.approve(sharkAddr, finalamount).send({from: dapp.address}) 
+            await daiContractObj.methods
+              .approve(sharkAddr, finalamount)
+              .send({ from: dapp.address })
+              .on('transactionHash', function (hash) {
+                dispatch({
+                  type: 'SET_CURRENTLY_MINING',
+                  payload: true,
+                })
+              })
+              .on('receipt', (hash) => {
+                console.log('approve')
+                console.log({ hash })
+                dispatch({
+                  type: 'SET_CURRENTLY_MINING',
+                  payload: false,
+                })
+              })
             console.log(userallowance)
-            await sharkContractObj.methods.deposit(finalamount).send({from: dapp.address})
+            await sharkContractObj.methods
+              .deposit(finalamount)
+              .send({ from: dapp.address })
+              .on('transactionHash', function (hash) {
+                dispatch({
+                  type: 'SET_CURRENTLY_MINING',
+                  payload: true,
+                })
+              })
+              .on('receipt', (hash) => {
+                console.log('deposit')
+                console.log({ hash })
+                dispatch({
+                  type: 'SET_CURRENTLY_MINING',
+                  payload: false,
+                })
+              })
           } else {
-            await sharkContractObj.methods.deposit(finalamount).send({from: dapp.address})
+            await sharkContractObj.methods
+              .deposit(finalamount)
+              .send({ from: dapp.address })
+              .on('transactionHash', function(hash){
+                dispatch({
+                  type: "SET_CURRENTLY_MINING",
+                  payload: true
+                })
+              })
+              .on('receipt', (hash) => {
+                console.log('else deposit')
+                console.log({ hash })
+                dispatch({
+                  type: 'SET_CURRENTLY_MINING',
+                  payload: false,
+                })
+              })
           }
-		
-          const sharktotalsupply = await sharkContractObj.methods.totalSupply().call({from: dapp.address})
-          console.log(sharktotalsupply)
-          const usertotalsupply = await sharkContractObj.methods.balanceOf(dapp.address).call({from: dapp.address})
-          console.log(usertotalsupply)          
-		}
+
+          const sharktotalsupply = await sharkContractObj.methods
+            .totalSupply()
+            .call({ from: dapp.address })
+
+          dispatch({
+            type: 'SET_SHARK_TOTAL_SUPPLY',
+            payload: sharktotalsupply,
+          })
+
+          const usertotalsupply = await sharkContractObj.methods
+            .balanceOf(dapp.address)
+            .call({ from: dapp.address })
+
+          dispatch({
+            type: 'SET_SHARK_USER_BALANCE',
+            payload: usertotalsupply,
+          })
+        }
         submitDeposit()
+        closeModal()
         break
       case 'withdraw':
-        async function submitWithdrawal () {
-          const withdrawresponse = await sharkContractObj.methods.withdraw(finalamount).send({from: dapp.address})
-            console.log(withdrawresponse)
+        async function submitWithdrawal() {
+          const withdrawresponse = await sharkContractObj.methods
+            .withdraw(finalamount)
+            .send({ from: dapp.address })
+            .on('transactionHash', function(hash){
+              dispatch({
+                type: "SET_CURRENTLY_MINING",
+                payload: true
+              })
+            })
+            .on('receipt', (hash) => {
+              console.log('withdraw')
+              console.log({ hash })
+              dispatch({
+                type: 'SET_CURRENTLY_MINING',
+                payload: false,
+              })
+            })
+
+          console.log(withdrawresponse)
+
+          const sharktotalsupply = await sharkContractObj.methods
+            .totalSupply()
+            .call({ from: dapp.address })
+
+          dispatch({
+            type: 'SET_SHARK_TOTAL_SUPPLY',
+            payload: sharktotalsupply,
+          })
+
+          const usertotalsupply = await sharkContractObj.methods
+            .balanceOf(dapp.address)
+            .call({ from: dapp.address })
+
+          dispatch({
+            type: 'SET_SHARK_USER_BALANCE',
+            payload: usertotalsupply,
+          })
         }
         submitWithdrawal()
+        closeModal()
         break
       default:
         break
@@ -89,7 +195,11 @@ const ConfirmModal = ({ type, closeModal }) => {
               <p>
                 You will {`${type}`}: {500} DAI
               </p>
-              <button className="form-action-btn" onClick={handleActionCLick}>
+              <button
+                className="form-action-btn"
+                onClick={handleActionCLick}
+                disabled={amount === 0}
+              >
                 {camelCaseToWords(type)}
               </button>
             </fieldset>

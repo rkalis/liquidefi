@@ -1,4 +1,4 @@
-const LoadingSpinner = () => {
+const BigLoadingSpinner = () => {
   return (
     <>
       <span className="spinner spinner-large" />
@@ -36,4 +36,4 @@ const LoadingSpinner = () => {
   )
 }
 
-export default LoadingSpinner
+export default BigLoadingSpinner

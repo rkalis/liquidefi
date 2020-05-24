@@ -10,7 +10,8 @@ contract UniswapperV2 {
     using WadRayMath for uint256;
 
     IUniswapRouter constant router = IUniswapRouter(0xf164fC0Ec4E93095b804a4795bBe1e041497b92a);
-
+    
+	//weth address is taken from main-net
     function _swapEthToTokenInputV2(address tokenAddress, uint256 ethAmount) internal returns (uint256[] memory) {
         address[] memory path = new address[](2);
         path[0] = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;

@@ -20,28 +20,31 @@ const ConfirmModal = ({ type, closeModal }) => {
     e.preventDefault()
     switch (type) {
       case 'deposit':
-        async function submitTx1 () {
-          const approveDAI = await daiContractObj.methods.approve(sharkAddr, finalamount).send({from: dapp.address})
-          const repsonse = await sharkContractObj.methods.deposit(finalamount).send({from: dapp.address})
-          console.log(approveDAI)
-          console.log(repsonse)
-		  const sharktotalsupply = await sharkContractObj.methods.totalSupply().call({from: dapp.address})
-		  console.log(sharktotalsupply)
-		  const usertotalsupply = await sharkContractObj.methods.balanceOf(dapp.address).call({from: dapp.address})
-		  console.log(usertotalsupply)
-		  const userallowance = await daiContractObj.methods.allowance(dapp.address,sharkAddr).call({from: dapp.address})
-		  console.log(userallowance)
+         async function submitDeposit () {
+          const userallowance = await daiContractObj.methods.allowance(dapp.address,sharkAddr).call({from: dapp.address})
+          const userallowance2 = dapp.web3.utils.toBN(userallowance)
+          const userallowance3 = dapp.web3.utils.toWei(userallowance2,"ether")
+          if (finalamount > userallowance3) {
+            await daiContractObj.methods.approve(sharkAddr, finalamount).send({from: dapp.address}) 
+            console.log(userallowance)
+            await sharkContractObj.methods.deposit(finalamount).send({from: dapp.address})
+          } else {
+            await sharkContractObj.methods.deposit(finalamount).send({from: dapp.address})
+          }
+
+          const sharktotalsupply = await sharkContractObj.methods.totalSupply().call({from: dapp.address})
+          console.log(sharktotalsupply)
+          const usertotalsupply = await sharkContractObj.methods.balanceOf(dapp.address).call({from: dapp.address})
+          console.log(usertotalsupply)          
         }
-        submitTx1()
-        
+        submitDeposit()
         break
       case 'withdraw':
-	    async function submitTx2 () {
-	    const withdrawresponse = await sharkContractObj.methods.withdraw(finalamount).send({from: dapp.address})
-        console.log(withdrawresponse)
+        async function submitWithdrawal () {
+          const withdrawresponse = await sharkContractObj.methods.withdraw(finalamount).send({from: dapp.address})
+            console.log(withdrawresponse)
         }
-        submitTx2()
-		
+        submitWithdrawal()
         break
       default:
         break

@@ -48,11 +48,7 @@ module.exports = {
   },
   compilers: {
     solc: {
-<<<<<<< HEAD
       version: "0.6.2"
-=======
-      version: "0.6.6"
->>>>>>> f0426c886cceab23ec2fba7d0a55afde47939a9f
     }
   },
   plugins: [

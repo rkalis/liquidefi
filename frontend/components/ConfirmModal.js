@@ -3,40 +3,36 @@ import { useStateValue } from '../state/state'
 import camelCaseToWords from '../utils/camelCaseToWords'
 import addrShortener from '../utils/addrShortener'
 import sharkContractObjSetup from '../utils/sharkContractObj'
-import { address as sharkAddr } from '../sharktoken-deployed'
 import daiContractObjSetup from '../utils/daiContractObj'
+import { address as sharkAddr } from '../sharktoken-deployed'
 
 const ConfirmModal = ({ type, closeModal }) => {
   const [{ dapp }, dispatch] = useStateValue()
-  const [amount, setAmount] = useState(0)
-  const sharkContractObj = sharkContractObjSetup(dapp.web3)  
-  const daiContractObj = daiContractObjSetup(dapp.web3)  
   const tokenamount = dapp.web3.utils.toBN(amount)
   const finalamount = dapp.web3.utils.toWei(tokenamount,"ether")
-
-  console.log(sharkContractObj)
-
+  
   const handleActionCLick = (e) => {
     e.preventDefault()
+
     switch (type) {
       case 'deposit':
-         async function submitDeposit () {
+        async function submitDeposit () {
           const userallowance = await daiContractObj.methods.allowance(dapp.address,sharkAddr).call({from: dapp.address})
-          const userallowance2 = dapp.web3.utils.toBN(userallowance)
-          const userallowance3 = dapp.web3.utils.toWei(userallowance2,"ether")
-          if (finalamount > userallowance3) {
+          userallowance = dapp.web3.utils.toBN(userallowance)
+          userallowance = dapp.web3.utils.toWei(userallowance,"ether")
+          if (finalamount > userallowance) {
             await daiContractObj.methods.approve(sharkAddr, finalamount).send({from: dapp.address}) 
             console.log(userallowance)
             await sharkContractObj.methods.deposit(finalamount).send({from: dapp.address})
           } else {
             await sharkContractObj.methods.deposit(finalamount).send({from: dapp.address})
           }
-
+		
           const sharktotalsupply = await sharkContractObj.methods.totalSupply().call({from: dapp.address})
           console.log(sharktotalsupply)
           const usertotalsupply = await sharkContractObj.methods.balanceOf(dapp.address).call({from: dapp.address})
           console.log(usertotalsupply)          
-        }
+		}
         submitDeposit()
         break
       case 'withdraw':

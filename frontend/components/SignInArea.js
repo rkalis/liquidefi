@@ -47,7 +47,7 @@ const SignInArea = ({ stretch, fs }) => {
   return (
     <div className="sign-in-wrap">
       {
-        dapp.wallet.name === 'TEST' ? (
+        dapp.balance < 0  ? (
           <button onClick={handleSignInClick} onKeyUp={handleSignInClick}>
             Sign In
           </button>

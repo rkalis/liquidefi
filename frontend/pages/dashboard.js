@@ -6,13 +6,14 @@ import liquidations from '../mocks/liquidations'
 import camelCaseToWords from '../utils/camelCaseToWords'
 import addrShortener from '../utils/addrShortener'
 import ConfirmModal from '../components/ConfirmModal'
-import LoadingSpinner from '../components/LoadingSpinner'
+import BigLoadingSpinner from '../components/BigLoadingSpinner'
 import sharkContractObjSetup from '../utils/sharkContractObj'
 import { useStateValue } from '../state/state'
+import MiningIndicator from '../components/MiningIndicator'
 
 const PieChart = dynamic(() => import('../components/PieChart'), {
   ssr: false,
-  loading: () => <LoadingSpinner />,
+  loading: () => <BigLoadingSpinner />,
 })
 
 const chartSize = 200
@@ -58,8 +59,13 @@ const Dashbboard = () => {
 
   return (
     <Layout>
+      {dapp.currentlyMining && (
+          <div className="mining-state">
+            <span>Mining... &nbsp;</span>
+            <MiningIndicator />
+          </div>
+        )}
       <div className="dashboard">
-        {dapp.currentlyMining && <span className="mining-indicator">Mining</span> }
         <section className="share-area">
           <div className="chart">
             {dapp.sharkTotalSupply !== undefined && dapp.sharkuserBalance !== undefined && (
@@ -71,7 +77,10 @@ const Dashbboard = () => {
                   },
                   {
                     name: 'Everyone Else',
-                    value: +(((dapp.sharkTotalSupply / 10 ** 18) - (dapp.sharkuserBalance / 10 ** 18)).toFixed(3)),
+                    value: +(
+                      dapp.sharkTotalSupply / 10 ** 18 -
+                      dapp.sharkuserBalance / 10 ** 18
+                    ).toFixed(3),
                   },
                 ]}
                 baseSize={chartSize}
@@ -164,10 +173,11 @@ const Dashbboard = () => {
           border-radius: 10px;
           position: relative;
         }
-        .mining-indicator {
+        .mining-state {
           position: absolute;
-          top: 10px;
-          left: 10px;
+          right: 0;
+          display: flex;
+          padding: 10px 10px 0 0;
         }
         .share-area {
           display: flex;

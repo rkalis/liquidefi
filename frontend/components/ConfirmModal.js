@@ -97,6 +97,24 @@ const ConfirmModal = ({ type, closeModal }) => {
             .withdraw(finalamount)
             .send({ from: dapp.address })
           console.log(withdrawresponse)
+
+            const sharktotalsupply = await sharkContractObj.methods
+            .totalSupply()
+            .call({ from: dapp.address })
+
+            dispatch({
+              type: 'SET_SHARK_TOTAL_SUPPLY',
+              payload: sharktotalsupply
+            })
+
+          const usertotalsupply = await sharkContractObj.methods
+            .balanceOf(dapp.address)
+            .call({ from: dapp.address })
+
+            dispatch({
+              type: 'SET_SHARK_USER_BALANCE',
+              payload: usertotalsupply
+            })
         }
         submitWithdrawal()
         closeModal()

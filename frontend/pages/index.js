@@ -51,19 +51,17 @@ const Index = () => {
         style={{ '--animate-duration': `${delayTime}s` }}
       >
         <div className="image-container">
-          {/* <img className="ripster" src="images/ripster.png" alt="ripster" /> */}
+          <img className="ripster" src="images/ripster.png" alt="ripster" />
         </div>
         <div className="text">
-          {/* <Typist cursor={{ show: false }} stdTypingDelay={0} avgTypingDelay={60} onTypingDone={handleFinishedSpeech}>
+          <Typist cursor={{ show: false }} stdTypingDelay={0} avgTypingDelay={60} onTypingDone={handleFinishedSpeech}>
             <Typist.Delay ms={delayTime*1000} />
             <h1>Hey Kid</h1>
             <p>Join up with the sharks and we can get all the liquidity you need buddy!</p>
             <p>All yas gotta do is put some DAI in the pool, and our bots will do the rest.</p>
             <p>Everyone gets an even share and we will keep you posted on what its worth as we liquidate these fools.</p>
-          </Typist> */}
-          {
-            /* {speechDone && ( */
-            dapp.balance >= 0 ? (
+          </Typist>
+          {speechDone && dapp.balance >= 0 ? (
               <Link href="/dashboard">
                 <a>
                   <button className="go-to-dash-board">Go to Dashboard</button>
@@ -74,8 +72,6 @@ const Index = () => {
                 <SignInArea fs={'2rem'} stretch/>
               </div>
             )
-            
-            //)
           }
         </div>
       </div>

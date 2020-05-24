@@ -54,7 +54,7 @@ const Dashbboard = () => {
       }
     }
     myAsync()
-  }, [dapp.web3, dapp.address])
+  }, [dapp.web3, dapp.address, dapp.sharkuserBalance])
 
   return (
     <Layout>
@@ -64,10 +64,13 @@ const Dashbboard = () => {
             {dapp.sharkTotalSupply !== undefined && dapp.sharkuserBalance !== undefined && (
               <PieChart
                 data={[
-                  { name: 'Your Share', value: Number(dapp.sharkuserBalance) },
+                  {
+                    name: 'Your Share',
+                    value: +(dapp.sharkuserBalance / 10 ** 18).toFixed(3),
+                  },
                   {
                     name: 'Everyone Else',
-                    value: (Number(dapp.sharkTotalSupply) - Number(dapp.sharkuserBalance)),
+                    value: +(((dapp.sharkTotalSupply / 10 ** 18) - (dapp.sharkuserBalance / 10 ** 18)).toFixed(3)),
                   },
                 ]}
                 baseSize={chartSize}
@@ -77,7 +80,7 @@ const Dashbboard = () => {
           <div className="info-and-actions">
             <h1>Share of Pool Ownership</h1>
             <h2>
-              {(dapp.sharkuserBalance / dapp.sharkTotalSupply) * 100}
+              {((dapp.sharkuserBalance / dapp.sharkTotalSupply) * 100).toFixed(2)}
               <span>%</span>
             </h2>
             <div className="actions">
@@ -90,17 +93,21 @@ const Dashbboard = () => {
             </div>
             <div className="stats">
               <h3 className="sharkdai-tokens">
-                <span>{dapp.sharkuserBalance}</span> Your SharkDai
+                <span>{(Number(dapp.sharkuserBalance) / 10 ** 18).toFixed(3)}</span> Your
+                SharkDai
               </h3>
               <h3 className="current-value">
-                <span>{dapp.daiValueofYourSharkTokens}</span> DAI
+                <span>
+                  {(Number(dapp.daiValueofYourSharkTokens) / 10 ** 18).toFixed(3)}
+                </span>{' '}
+                Value in DAI
               </h3>
             </div>
           </div>
         </section>
         <section className="liquidations-area">
-          <h2>Latest Liquidations</h2>
-          <p>Test Phase - get real data</p>
+          {/* <h2>Latest Liquidations</h2>
+          <p>Test Phase - get real data</p> */}
           {/* <ul className="liquidations-list">
             {liquidations.map((liquidation, idx) => {
               return (

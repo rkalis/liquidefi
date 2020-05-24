@@ -2,35 +2,46 @@ import { useState } from 'react'
 import { useStateValue } from '../state/state'
 import camelCaseToWords from '../utils/camelCaseToWords'
 import addrShortener from '../utils/addrShortener'
+import sharkContractObjSetup from '../utils/sharkContractObj'
+import { address as sharkAddr } from '../sharktoken-deployed'
+import daiContractObjSetup from '../utils/daiContractObj'
 
-const ConfirmModal = ({type, closeModal}) => {
+const ConfirmModal = ({ type, closeModal }) => {
   const [{ dapp }, dispatch] = useStateValue()
-  const [modalState, setModalState] = useState(0)
   const [amount, setAmount] = useState(0)
-  console.log(dapp)
+  const sharkContractObj = sharkContractObjSetup(dapp.web3)  
+  const daiContractObj = daiContractObjSetup(dapp.web3)  
+  const tokenamount = dapp.web3.utils.toBN(amount)
+  const finalamount = dapp.web3.utils.toWei(tokenamount,"ether")
 
-  const handleActionCLick = () => {
+  console.log(sharkContractObj)
+
+  const handleActionCLick = (e) => {
+    e.preventDefault()
     switch (type) {
       case 'deposit':
-        console.log('deposit')
-        setModalState(1)
+        async function submitTx1 () {
+          const approveDAI = await daiContractObj.methods.approve(sharkAddr, finalamount).send({from: dapp.address})
+          const repsonse = await sharkContractObj.methods.deposit(finalamount).send({from: dapp.address})
+          console.log(approveDAI)
+          console.log(repsonse)
+		  const sharktotalsupply = await sharkContractObj.methods.totalSupply().call({from: dapp.address})
+		  console.log(sharktotalsupply)
+		  const usertotalsupply = await sharkContractObj.methods.balanceOf(dapp.address).call({from: dapp.address})
+		  console.log(usertotalsupply)
+		  const userallowance = await daiContractObj.methods.allowance(dapp.address,sharkAddr).call({from: dapp.address})
+		  console.log(userallowance)
+        }
+        submitTx1()
+        
         break
       case 'withdraw':
-        console.log('withdraw')
-        setModalState(1)
-        break
-      default:
-        break
-    }
-  }
-
-  const handleConfirmClick = (e) => {
-    switch (e.target.id) {
-      case 'yes':
-        console.log('yes')
-        break
-      case 'no':
-        console.log('no')
+	    async function submitTx2 () {
+	    const withdrawresponse = await sharkContractObj.methods.withdraw(finalamount).send({from: dapp.address})
+        console.log(withdrawresponse)
+        }
+        submitTx2()
+		
         break
       default:
         break
@@ -49,51 +60,44 @@ const ConfirmModal = ({type, closeModal}) => {
     <div className="ConfirmModal">
       <div className="modal-contents">
         <div className="header-area">
-          <div className="boder-left"/>
+          <div className="boder-left" />
           <div className="circle">
             <img src="https://i.imgur.com/qGCfAI9.png" alt="logo" />
           </div>
-          <div className="border-right"/>
-          <button className="closeModal" onClick={handleCloseModal}>X</button>
+          <div className="border-right" />
+          <button className="closeModal" onClick={handleCloseModal}>
+            X
+          </button>
         </div>
-        {modalState === 0 && (
-          <div className="action-area">
-            <form>
-              <fieldset>
-                <label htmlFor="amount">{camelCaseToWords(type)} Amount</label>
-                <input type="number" name="amount" step="0.01" min="0.00" value={amount} onChange={handleSetAmount}/>
-              </fieldset>
-              <fieldset>
-                <label htmlFor="address">Address</label>
-                <input type="text" value={addrShortener(dapp.address)} disabled />
-              </fieldset>
-              <fieldset>
-                <p>You will {`${type}`}: {500} DAI</p>
-                <button className="form-action-btn" onClick={handleActionCLick}>
-                  {camelCaseToWords(type)}
-                </button>
-              </fieldset>
-            </form>
-          </div>
-        )}
-        {modalState === 1 && (
-          <div className="action-area">
-            <br/>
-            <div style={{textAlign: 'center'}}>
-              <h1>Are you sure?</h1>
-            </div>
-            <div className="confirm-buttons">
-              <button className="yes" onClick={handleConfirmClick} id="yes">
-                YES
+        <div className="action-area">
+          <form>
+            <fieldset>
+              <label htmlFor="amount">{camelCaseToWords(type)} Amount in DAI</label>
+              <input
+                type="number"
+                name="amount"
+                step="0.01"
+                min="0.00"
+                value={amount}
+                onChange={handleSetAmount}
+              />
+            </fieldset>
+            <fieldset>
+              <label htmlFor="address">Address</label>
+              <input type="text" value={addrShortener(dapp.address)} disabled />
+            </fieldset>
+            <fieldset>
+              <p>
+                You will {`${type}`}: {500} DAI
+              </p>
+              <button className="form-action-btn" onClick={handleActionCLick}>
+                {camelCaseToWords(type)}
               </button>
-              <button className="no" onClick={handleCloseModal} id="no">
-                No
-              </button>
-            </div>
-          </div>
-        )}
+            </fieldset>
+          </form>
+        </div>
       </div>
-      <div className="modal-overlay"/>
+      <div className="modal-overlay" />
       <style jsx>{`
         .ConfirmModal {
           width: 100%;
@@ -116,7 +120,7 @@ const ConfirmModal = ({type, closeModal}) => {
         .modal-overlay {
           width: 100%;
           height: 100%;
-          background: rgba(0,0,0,.5);
+          background: rgba(0, 0, 0, 0.5);
           z-index: 0;
         }
         .action-area {
@@ -127,22 +131,24 @@ const ConfirmModal = ({type, closeModal}) => {
         input {
           display: block;
         }
-        label{ text-align: left; }
-        fieldset { 
+        label {
+          text-align: left;
+        }
+        fieldset {
           border: none;
-          border-bottom: 1px solid #CCC;
+          border-bottom: 1px solid #ccc;
           padding: 20px;
           text-align: center;
         }
         input {
           font-size: 1.2rem;
           appearance: none;
-          border: 1px solid #CCC;
+          border: 1px solid #ccc;
           border-radius: 4px;
           padding: 5px;
           width: 100%;
         }
-        label { 
+        label {
           margin-bottom: 5px;
         }
         button.form-action-btn {
@@ -175,8 +181,13 @@ const ConfirmModal = ({type, closeModal}) => {
           overflow: hidden;
           border: 3px solid white;
         }
-        button.yes {background: green;}
-        button.no {background: red; margin-right: 0;}
+        button.yes {
+          background: green;
+        }
+        button.no {
+          background: red;
+          margin-right: 0;
+        }
         .closeModal {
           max-width: 30px;
           max-height: 30px;

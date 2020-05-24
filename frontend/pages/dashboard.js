@@ -8,8 +8,11 @@ import addrShortener from '../utils/addrShortener'
 import ConfirmModal from '../components/ConfirmModal'
 import BigLoadingSpinner from '../components/BigLoadingSpinner'
 import sharkContractObjSetup from '../utils/sharkContractObj'
+import aDaiContractObjSetup from '../utils/aDaiContractObj'
 import { useStateValue } from '../state/state'
 import MiningIndicator from '../components/MiningIndicator'
+
+import { address as sharkContractAddress } from '../sharktoken-deployed'
 
 const PieChart = dynamic(() => import('../components/PieChart'), {
   ssr: false,
@@ -41,6 +44,23 @@ const Dashbboard = () => {
 
   useEffect(() => {
     const sharkContractObj = sharkContractObjSetup(dapp.web3)
+    const aDaiContractObj = aDaiContractObjSetup(dapp.web3)
+    
+    aDaiContractObj.events.Transfer({
+      filter: { to: sharkContractAddress }, // Using an array means OR: e.g. 20 or 23
+      fromBlock: 'latest'
+    })
+    .on('data', async function(event){
+      const daiValueofYourSharkTokens = await sharkContractObj.methods
+      .fromSharkToken(dapp.sharkuserBalance)
+      .call({ from: dapp.address })
+      
+      dispatch({
+        type: 'SET_USERS_TOKEN_VALUE_IN_DAI',
+        payload: daiValueofYourSharkTokens,
+      })
+    })
+    .on('error', console.error);
 
     const myAsync = async function () {
       if (dapp.sharkuserBalance) {

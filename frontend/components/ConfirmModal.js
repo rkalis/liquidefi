@@ -14,10 +14,13 @@ import { address as sharkAddr } from '../sharktoken-deployed'
 
 const ConfirmModal = ({ type, closeModal }) => {
   const [{ dapp }, dispatch] = useStateValue()
+  
   const [amount, setAmount] = useState(0)
   const [confirmed, setConfirmed] = useState(false)
+  
   const sharkContractObj = sharkContractObjSetup(dapp.web3)
   const daiContractObj = daiContractObjSetup(dapp.web3)
+  
   const tokenamount = dapp.web3.utils.toBN(amount)
   const finalamount = dapp.web3.utils.toWei(tokenamount, 'ether')
 

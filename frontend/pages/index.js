@@ -1,21 +1,49 @@
 // REACT & NEXT
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import Layout from '../components/Layout'
 import Typist from 'react-typist'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useStateValue } from '../state/state'
+import sharkContractObjSetup from '../utils/sharkContractObj'
 
 const delayTime = 4;
 const SignInArea = dynamic(() => import('../components/SignInArea'), { ssr: false })
 
 const Index = () => {
   const [{ dapp }, dispatch] = useStateValue()
-  const stateDis = useStateValue()
   const [speechDone, setSpeechDone] = useState(false)
-  const handleFinishedSpeech = () => {
-    setSpeechDone(true)
-  }
+  const handleFinishedSpeech = () => setSpeechDone(true)
+
+  useEffect(() => {
+    if(dapp.web3 !== undefined && dapp.address !== undefined) {
+      const sharkContractObj = sharkContractObjSetup(dapp.web3)
+
+      const myAsync = async function () {
+        if(dapp.address) {
+          const sharktotalsupply = await sharkContractObj.methods
+            .totalSupply()
+            .call({ from: dapp.address })
+      
+            dispatch({
+              type: 'SET_SHARK_TOTAL_SUPPLY',
+              payload: sharktotalsupply
+            })
+      
+          const usertotalsupply = await sharkContractObj.methods
+            .balanceOf(dapp.address)
+            .call({ from: dapp.address })
+      
+            dispatch({
+              type: 'SET_SHARK_USER_BALANCE',
+              payload: usertotalsupply
+            })
+        }
+      }
+      myAsync()
+    }
+  }, [dapp.web3, dapp.address])
+
   return (
     <Layout>
       <div

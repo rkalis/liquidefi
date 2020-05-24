@@ -1,4 +1,4 @@
-import { PieChart, Pie, Cell } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip } from 'recharts'
 
 const CustomizedLabel = ({
   cx,
@@ -46,6 +46,7 @@ const PieChartWrap = ({data, baseSize = 200}) => {
           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
         ))}
       </Pie>
+      <Tooltip />
     </PieChart>
   )
 }

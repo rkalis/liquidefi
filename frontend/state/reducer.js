@@ -17,6 +17,15 @@ function dappReducer(state = {}, action) {
     case 'SET_WEB3':
       newState.web3 = action.payload
       return { ...state, ...newState }
+    case 'SET_SHARK_TOTAL_SUPPLY':
+      newState.sharkTotalSupply = action.payload
+      return { ...state, ...newState }
+    case 'SET_SHARK_USER_BALANCE':
+      newState.sharkuserBalance = action.payload
+      return { ...state, ...newState }
+    case 'SET_USERS_TOKEN_VALUE_IN_DAI':
+      newState.daiValueofYourSharkTokens = action.payload
+      return { ...state, ...newState }
     default:
       return state
   }

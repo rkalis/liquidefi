@@ -52,7 +52,7 @@ const Dashbboard = () => {
     })
     .on('data', async function(event){
       const daiValueofYourSharkTokens = await sharkContractObj.methods
-      .fromSharkToken(dapp.sharkuserBalance)
+      .underlyingBalanceOf(dapp.address)
       .call({ from: dapp.address })
       
       dispatch({

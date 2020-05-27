@@ -101,6 +101,15 @@ const ConfirmModal = ({ type, closeModal }) => {
             type: 'SET_SHARK_USER_BALANCE',
             payload: usertotalsupply,
           })
+
+          const daiValueofYourSharkTokens = await sharkContractObj.methods
+          .fromSharkToken(dapp.sharkuserBalance)
+          .call({ from: dapp.address })
+          
+          dispatch({
+            type: 'SET_USERS_TOKEN_VALUE_IN_DAI',
+            payload: daiValueofYourSharkTokens,
+          })
         }
         submitDeposit()
         closeModal()
@@ -143,6 +152,15 @@ const ConfirmModal = ({ type, closeModal }) => {
           dispatch({
             type: 'SET_SHARK_USER_BALANCE',
             payload: usertotalsupply,
+          })
+          
+          const daiValueofYourSharkTokens = await sharkContractObj.methods
+          .fromSharkToken(dapp.sharkuserBalance)
+          .call({ from: dapp.address })
+          
+          dispatch({
+            type: 'SET_USERS_TOKEN_VALUE_IN_DAI',
+            payload: daiValueofYourSharkTokens,
           })
         }
         submitWithdrawal()
@@ -192,9 +210,6 @@ const ConfirmModal = ({ type, closeModal }) => {
               <input type="text" value={addrShortener(dapp.address)} disabled />
             </fieldset>
             <fieldset>
-              <p>
-                You will {`${type}`}: {500} DAI
-              </p>
               <button
                 className="form-action-btn"
                 onClick={handleActionCLick}

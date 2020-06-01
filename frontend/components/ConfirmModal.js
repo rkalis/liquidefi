@@ -103,7 +103,7 @@ const ConfirmModal = ({ type, closeModal }) => {
           })
 
           const daiValueofYourSharkTokens = await sharkContractObj.methods
-          .fromSharkToken(dapp.sharkuserBalance)
+          .fromSharkToken(usertotalsupply)
           .call({ from: dapp.address })
           
           dispatch({
@@ -155,7 +155,7 @@ const ConfirmModal = ({ type, closeModal }) => {
           })
           
           const daiValueofYourSharkTokens = await sharkContractObj.methods
-          .fromSharkToken(dapp.sharkuserBalance)
+          .fromSharkToken(usertotalsupply)
           .call({ from: dapp.address })
           
           dispatch({
@@ -195,7 +195,7 @@ const ConfirmModal = ({ type, closeModal }) => {
         <div className="action-area">
           <form>
             <fieldset>
-              <label htmlFor="amount">{camelCaseToWords(type)} Amount in DAI</label>
+              <label htmlFor="amount">{camelCaseToWords(type)} Amount in {type === 'withdraw' && 'shark'}DAI</label>
               <input
                 type="number"
                 name="amount"

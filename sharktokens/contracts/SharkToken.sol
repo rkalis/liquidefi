@@ -7,9 +7,11 @@ import "./lib/dappsys/DSAuth.sol";
 import "./lib/aave/ILendingPoolAddressesProvider.sol";
 import "./lib/aave/Iatoken.sol";
 import "./lib/aave/ILendingPool.sol";
+import "./lib/compound/CTokenInterfaces.sol";
 import "./lib/aave/WadRayMath.sol";
 import "./Uniswapper.sol";
 import "./UniswapperV2.sol";
+import "./cTokensMapping.sol";
 
 /**
  * @title SharkToken
@@ -19,7 +21,7 @@ import "./UniswapperV2.sol";
  * liquidate loans on popular lending platforms. The profits of these liquidations
  * are shared among the SharkToken holders.
  */
-contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 {
+contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2, cTokensMapping {
     uint256 public constant UINT_MAX_VALUE = uint256(-1);
     address public constant ETH_MOCK_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -173,6 +175,27 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2 
         uint256 profit = underlyingSupply() - initialSupply;
         _takeFee(profit, feePercentage, feeReceiver);
         emit Liquidated(bytes4(0), userAddress, profit);
+    }
+
+    /**
+     * @notice Liquidate a loan on Compound.
+     * @param collateralAddress The address of the collateral token
+     * @param userAddress The address of the user that gets liquidated
+     * @param purchaseAmount The amount of underlying tokens to use in the liquidation
+     */
+    function liquidateOnCompound(
+        address userAddress,
+        uint256 purchaseAmount,
+        address collateralAddress,
+        uint256 feePercentage,
+        address feeReceiver,
+        bool uniswapV2
+    ) external nonReentrant {
+        require(feePercentage <= maxFee, "Requested fee exceeds maximum");
+        uint256 initialSupply = underlyingSupply();
+        uint256 returnAmount;
+
+        // Liquidate on Compound
     }
 
     function _swapCollateral(address collateral) internal returns (uint256) {

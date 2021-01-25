@@ -27,7 +27,7 @@ contract SharkToken is ERC20, DSAuth, ReentrancyGuard, Uniswapper, UniswapperV2,
 
     using WadRayMath for uint256;
 
-    ILendingPoolAddressesProvider private aaveAddressProvider = ILendingPoolAddressesProvider(0x24a42fD28C976A61Df5D00D0599C34c4f90748c8);
+    ILendingPoolAddressesProvider private aaveAddressProvider = ILendingPoolAddressesProvider(0x1c8756FD2B28e9426CDBDcC7E3c4d64fa9A54728);
     Iatoken public underlying;
     IERC20 public daiAddress;
     uint256 public maxFee = 0.8 ether; // 80% (1 ether == 100%)
